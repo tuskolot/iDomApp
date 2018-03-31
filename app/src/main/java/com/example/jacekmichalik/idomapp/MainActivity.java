@@ -1,9 +1,12 @@
 package com.example.jacekmichalik.idomapp;
 
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.content.ContextCompat;
+import android.support.v4.graphics.drawable.DrawableCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
@@ -43,7 +46,10 @@ public class MainActivity extends AppCompatActivity {
     private LinkedList<String> macroNamesList = new LinkedList<>();
     private LinkedList<Integer> macroIDList = new LinkedList<>();
 
-    private String allLogs = "";
+    private String allLogs = ""; // pobrana historia z serwera
+    private boolean isPartyActive = !false; // pobrane z serwera
+
+    // kompoenty
     @BindView(R.id.macroListView)
     ListView macroListView;
     @BindView(R.id.tOutTV)
@@ -88,7 +94,7 @@ public class MainActivity extends AppCompatActivity {
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
-        Toolbar toolbar =  findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
 
@@ -113,9 +119,9 @@ public class MainActivity extends AppCompatActivity {
                 }
         );
 
-        allLogsImage.setOnClickListener( new View.OnClickListener() {
+        allLogsImage.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                Intent moreLogs = new Intent( getBaseContext() , LogosInfoActivity.class);
+                Intent moreLogs = new Intent(getBaseContext(), LogosInfoActivity.class);
                 moreLogs.putExtra("logs", allLogs);
                 startActivity(moreLogs);
             }
@@ -126,7 +132,6 @@ public class MainActivity extends AppCompatActivity {
         tempINInfo.setText("");
         importMacrosList();
         importSysInfo();
-
 
 
     }
@@ -166,8 +171,8 @@ public class MainActivity extends AppCompatActivity {
                     public void onResponse(String response) {
                         // Display the first 500 characters of the response string.
 //                        mTextView.setText("Response is: "+ response.substring(0,500));
-                        JSONArray ja  ;
-                        JSONObject jo ;
+                        JSONArray ja;
+                        JSONObject jo;
                         try {
                             ja = new JSONArray(response);
                             for (int i = 0; i < ja.length(); i++) {
@@ -205,7 +210,7 @@ public class MainActivity extends AppCompatActivity {
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
-                        JSONObject jo ;
+                        JSONObject jo;
                         try {
                             jo = new JSONObject(response);
                             tempOutInfo.setText(jo.getString("tempout"));
@@ -222,6 +227,16 @@ public class MainActivity extends AppCompatActivity {
                             tempOutInfo.setText("bad getInfo JSON !");
                         }
                         updateProgressCounter(false);
+                        if (isPartyActive)
+                            DrawableCompat.setTint(
+                                    partyModeImage.getDrawable(),
+                                    ContextCompat.getColor(getApplicationContext(), R.color.colorAccent));
+                        else
+                            DrawableCompat.setTint(
+                                    partyModeImage.getDrawable(),
+                                    Color.LTGRAY);
+
+
                     }
                 }, new Response.ErrorListener()
 
@@ -233,7 +248,6 @@ public class MainActivity extends AppCompatActivity {
 //                mTextView.setText("That didn't work!");
             }
         });
-// Add the request to the RequestQueue.
         queue.add(stringRequest);
     }
 

@@ -62,7 +62,8 @@
         android:layout_height="wrap_content"
         android:layout_marginEnd="8dp"
         android:textAlignment="center"
-        android:textColor="@android:color/holo_red_dark"
+        android:textColor="@color/colorPrimaryDark"
+        android:textSize="18sp"
         app:layout_constraintBottom_toBottomOf="@+id/tempINImage"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
