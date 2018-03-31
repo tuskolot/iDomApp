@@ -109,7 +109,7 @@
         android:id="@+id/partyImage"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
+        android:layout_marginStart="8dp"
         android:contentDescription="@android:string/ok"
         android:tint="@color/colorAccent"
         app:layout_constraintStart_toEndOf="@+id/tOutTV"
