@@ -8,6 +8,26 @@
     tools:context=".MainActivity"
     tools:showIn="@layout/activity_main">
 
+    <ImageView
+        android:id="@+id/tempINImage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:contentDescription="@android:string/ok"
+        android:tint="@color/colorPrimary"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/temp_inside" />
+
+    <TextView
+        android:id="@+id/tempIN_TV"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:textSize="18sp"
+        app:layout_constraintBottom_toBottomOf="@+id/tempINImage"
+        app:layout_constraintLeft_toRightOf="@+id/tempINImage"
+        app:layout_constraintTop_toTopOf="parent" />
+
+
     <ListView
         android:id="@+id/macroListView"
         android:layout_width="0dp"
@@ -25,34 +45,86 @@
     <TextView
         android:id="@+id/iDomTV"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
+        android:layout_height="0dp"
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
-        android:maxHeight="60dp"
+        android:maxHeight="35dp"
         android:textColor="@android:color/holo_blue_light"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintEnd_toStartOf="@+id/moreLogsImage"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/moreLogsImage" />
 
 
     <TextView
         android:id="@+id/lastEntryTV"
-        android:layout_width="240dp"
+        android:layout_width="172dp"
         android:layout_height="wrap_content"
         android:layout_marginEnd="8dp"
-        android:text="adas"
         android:textAlignment="center"
         android:textColor="@android:color/holo_red_dark"
+        app:layout_constraintBottom_toBottomOf="@+id/tempINImage"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
-        android:id="@+id/tempTV"
-        android:layout_width="113dp"
-        android:layout_height="wrap_content"
-        android:text="in:123 / out:123"
-        app:layout_constraintStart_toEndOf="parent"
+        android:id="@+id/tOutTV"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:textAlignment="gravity"
+        android:textColor="@color/colorPrimaryDark"
+        android:textSize="18sp"
+        app:layout_constraintStart_toEndOf="@+id/tempOutImage"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <ProgressBar
+        android:id="@+id/showLoadingProgress"
+        style="?android:attr/progressBarStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="168dp"
+        android:layout_marginStart="168dp"
+        android:layout_marginTop="8dp"
+        android:indeterminate="true"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageView
+        android:id="@+id/tempOutImage"
+        android:layout_width="wrap_content"
+
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:contentDescription="@android:string/ok"
+        android:tint="@color/colorPrimaryDark"
+        android:tintMode="src_atop"
+        app:layout_constraintStart_toEndOf="@+id/tempIN_TV"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/temp_outside" />
+
+    <ImageView
+        android:id="@+id/partyImage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:contentDescription="@android:string/ok"
+        android:tint="@color/colorAccent"
+        app:layout_constraintStart_toEndOf="@+id/tOutTV"
+        app:layout_constraintTop_toTopOf="@+id/tOutTV"
+        app:srcCompat="@drawable/party" />
+
+    <ImageView
+        android:id="@+id/moreLogsImage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="2dp"
+        android:layout_marginEnd="8dp"
+        android:contentDescription="@android:string/ok"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:srcCompat="@android:drawable/ic_menu_more" />
+
 
 </android.support.constraint.ConstraintLayout>

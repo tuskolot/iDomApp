@@ -1,5 +1,6 @@
 package com.example.jacekmichalik.idomapp;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -11,7 +12,9 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -32,24 +35,51 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
+import static android.view.View.VISIBLE;
+
 public class MainActivity extends AppCompatActivity {
 
 
     private LinkedList<String> macroNamesList = new LinkedList<>();
     private LinkedList<Integer> macroIDList = new LinkedList<>();
 
+    private String allLogs = "";
     @BindView(R.id.macroListView)
     ListView macroListView;
-
-    @BindView(R.id.tempTV)
-    TextView tempInfo;
+    @BindView(R.id.tOutTV)
+    TextView tempOutInfo;
+    @BindView(R.id.tempIN_TV)
+    TextView tempINInfo;
 
     @BindView(R.id.lastEntryTV)
     TextView lastEntryInfo;
-
     @BindView(R.id.iDomTV)
     TextView iDomInfo;
+    @BindView(R.id.showLoadingProgress)
+    ProgressBar progressBar;
+    @BindView(R.id.partyImage)
+    ImageView partyModeImage;
 
+    @BindView(R.id.moreLogsImage)
+    ImageView allLogsImage;
+
+    private int pendingProcessCount = 0;
+
+    private void updateProgressCounter(boolean incCounter) {
+        if (incCounter)
+            pendingProcessCount++;
+        else if (pendingProcessCount > 0)
+            pendingProcessCount--;
+
+        if (pendingProcessCount > 0) {
+            // coś się mieli w tle - pokaż licznik
+            if (progressBar.getVisibility() != View.VISIBLE)
+                progressBar.setVisibility(VISIBLE);
+        } else {
+            progressBar.setVisibility(View.INVISIBLE);
+        }
+
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,10 +88,11 @@ public class MainActivity extends AppCompatActivity {
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar =  findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+
+        FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -82,10 +113,21 @@ public class MainActivity extends AppCompatActivity {
                 }
         );
 
+        allLogsImage.setOnClickListener( new View.OnClickListener() {
+            public void onClick(View v) {
+                Intent moreLogs = new Intent( getBaseContext() , LogosInfoActivity.class);
+                moreLogs.putExtra("logs", allLogs);
+                startActivity(moreLogs);
+            }
+        });
+
         lastEntryInfo.setText("pobieram dane");
-        tempInfo.setText("");
+        tempOutInfo.setText("");
+        tempINInfo.setText("");
         importMacrosList();
         importSysInfo();
+
+
 
     }
 
@@ -117,14 +159,15 @@ public class MainActivity extends AppCompatActivity {
         RequestQueue queue = Volley.newRequestQueue(this);
         String url = "http://192.168.1.100/JSON/@GETMACROS";
 
+        updateProgressCounter(true);
         StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
                         // Display the first 500 characters of the response string.
 //                        mTextView.setText("Response is: "+ response.substring(0,500));
-                        JSONArray ja = null;
-                        JSONObject jo = null;
+                        JSONArray ja  ;
+                        JSONObject jo ;
                         try {
                             ja = new JSONArray(response);
                             for (int i = 0; i < ja.length(); i++) {
@@ -136,7 +179,8 @@ public class MainActivity extends AppCompatActivity {
                             macroNamesList.add("bad JSON!");
                         }
 
-                        macroListView.setAdapter(new ArrayAdapter<String>(getBaseContext(), android.R.layout.simple_list_item_activated_1, macroNamesList));
+                        macroListView.setAdapter(new ArrayAdapter<>(getBaseContext(), android.R.layout.simple_list_item_activated_1, macroNamesList));
+                        updateProgressCounter(false);
 
                     }
                 }, new Response.ErrorListener() {
@@ -145,6 +189,7 @@ public class MainActivity extends AppCompatActivity {
                 macroNamesList.add("error");
                 macroNamesList.add(error.toString());
 //                mTextView.setText("That didn't work!");
+                updateProgressCounter(false);
             }
         });
         queue.add(stringRequest);
@@ -155,27 +200,28 @@ public class MainActivity extends AppCompatActivity {
         RequestQueue queue = Volley.newRequestQueue(this);
         String url = "http://192.168.1.100/JSON/@GETINFO";
 
+        updateProgressCounter(true);
         StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
-                        JSONObject jo = null;
+                        JSONObject jo ;
                         try {
                             jo = new JSONObject(response);
-                            tempInfo.setText(
-                                    "IN:" + jo.getString("tempin") + " / " +
-                                            "OUT:" + jo.getString("tempout")
-                            );
+                            tempOutInfo.setText(jo.getString("tempout"));
+                            tempINInfo.setText(jo.getString("tempin"));
 
-                            lastEntryInfo.setText( jo.getString("lastgate") );
-                            iDomInfo.setText( jo.getString("lastlogs") );
+                            lastEntryInfo.setText(jo.getString("lastgate"));
+                            allLogs = jo.getString("lastlogs");
+                            iDomInfo.setText(allLogs);
 
                         } catch (
                                 Exception e)
 
                         {
-                            tempInfo.setText("bad getInfo JSON !");
+                            tempOutInfo.setText("bad getInfo JSON !");
                         }
+                        updateProgressCounter(false);
                     }
                 }, new Response.ErrorListener()
 
