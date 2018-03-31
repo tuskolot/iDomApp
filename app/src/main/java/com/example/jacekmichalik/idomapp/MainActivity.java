@@ -47,7 +47,10 @@ public class MainActivity extends AppCompatActivity {
     private LinkedList<Integer> macroIDList = new LinkedList<>();
 
     private String allLogs = ""; // pobrana historia z serwera
-    private boolean isPartyActive = !false; // pobrane z serwera
+    private boolean isPartyActive = false; // pobrane z serwera
+
+//    public final static String IDOM_WWW = "http://192.168.1.100/";
+    public final static String IDOM_WWW = "http://192.168.43.228/";
 
     // kompoenty
     @BindView(R.id.macroListView)
@@ -162,7 +165,7 @@ public class MainActivity extends AppCompatActivity {
     private void importMacrosList() {
 
         RequestQueue queue = Volley.newRequestQueue(this);
-        String url = "http://192.168.1.100/JSON/@GETMACROS";
+        String url = IDOM_WWW+"JSON/@GETMACROS";
 
         updateProgressCounter(true);
         StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
@@ -203,7 +206,7 @@ public class MainActivity extends AppCompatActivity {
     private void importSysInfo() {
 
         RequestQueue queue = Volley.newRequestQueue(this);
-        String url = "http://192.168.1.100/JSON/@GETINFO";
+        String url = IDOM_WWW+"JSON/@GETINFO";
 
         updateProgressCounter(true);
         StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
@@ -217,6 +220,7 @@ public class MainActivity extends AppCompatActivity {
                             tempINInfo.setText(jo.getString("tempin"));
 
                             lastEntryInfo.setText(jo.getString("lastgate"));
+                            isPartyActive = jo.getString("isparty").equals("X");
                             allLogs = jo.getString("lastlogs");
                             iDomInfo.setText(allLogs);
 
@@ -255,13 +259,14 @@ public class MainActivity extends AppCompatActivity {
     private void runMacro(int macroID, final String macroName) {
 
         RequestQueue queue = Volley.newRequestQueue(this);
-        String url = "http://192.168.1.100/JSON/@RUNMACRO$" + macroID;
+        String url = IDOM_WWW + "JSON/@RUNMACRO$" + macroID;
 
         StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
                         Toast.makeText(getBaseContext(), macroName + " uruchomione", Toast.LENGTH_SHORT).show();
+                        importSysInfo();
                     }
                 },
                 new Response.ErrorListener() {
