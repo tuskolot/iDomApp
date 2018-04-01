@@ -1,4 +1,36 @@
 <resources>
     <string name="app_name">iDomApp</string>
     <string name="action_settings">Settings</string>
+    <string name="title_activity_i_dom_settings">Settings</string>
+
+    <!-- Strings related to Settings -->
+
+    <!-- Example General settings -->
+    <string name="pref_header_general">Ogólne ustawienia</string>
+
+    <string name="pref_title_alarm">Stan alarmu</string>
+    <string name="pref_description_alarm">Aktualny stan alarmu
+    </string>
+
+    <string name="pref_title_json_server">Adres serwera</string>
+    <string name="pref_default_json_server">http://192.168.1.100/</string>
+
+
+    <!-- Example settings for Default screen -->
+    <string name="pref_header_default_screen">Domyslny ekran startowy</string>
+
+    <string name="pref_title_default_screen">Domyślny ekran</string>
+    <string-array name="pref_screens_names">
+        <item>parter</item>
+        <item>piętro</item>
+        <item>strych</item>
+        <item>makra</item>
+    </string-array>
+    <string-array name="pref_screens_values">
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>-1</item>
+    </string-array>
+
 </resources>

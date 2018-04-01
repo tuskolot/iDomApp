@@ -1,0 +1,15 @@
+<preference-headers xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- These settings headers are only used on tablets. -->
+
+    <header
+        android:fragment="com.example.jacekmichalik.idomapp.iDOmSettingsActivity$GeneralPreferenceFragment"
+        android:icon="@android:drawable/ic_dialog_info"
+        android:title="@string/pref_header_general" />
+
+    <header
+        android:fragment="com.example.jacekmichalik.idomapp.iDOmSettingsActivity$DefaultScreenPreferenceFragment"
+        android:icon="@android:drawable/btn_default"
+        android:title="@string/pref_header_default_screen" />
+
+</preference-headers>

@@ -1,8 +1,11 @@
 package com.example.jacekmichalik.idomapp;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.preference.PreferenceActivity;
+import android.preference.PreferenceManager;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
@@ -49,8 +52,7 @@ public class MainActivity extends AppCompatActivity {
     private String allLogs = ""; // pobrana historia z serwera
     private boolean isPartyActive = false; // pobrane z serwera
 
-//    public final static String IDOM_WWW = "http://192.168.1.100/";
-    public final static String IDOM_WWW = "http://192.168.43.228/";
+    public static String IDOM_WWW = "http://192.168.1.100/";
 
     // kompoenty
     @BindView(R.id.macroListView)
@@ -101,6 +103,10 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
 
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        IDOM_WWW = prefs.getString("json_serwver", IDOM_WWW);
+
+
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -130,12 +136,11 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        lastEntryInfo.setText("pobieram dane");
+        lastEntryInfo.setText("pobieram dane:"+IDOM_WWW);
         tempOutInfo.setText("");
         tempINInfo.setText("");
         importMacrosList();
         importSysInfo();
-
 
     }
 
@@ -155,6 +160,9 @@ public class MainActivity extends AppCompatActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            Intent configActivity;
+            configActivity = new Intent(this , iDOmSettingsActivity.class );
+            startActivity(configActivity);
             return true;
         }
 

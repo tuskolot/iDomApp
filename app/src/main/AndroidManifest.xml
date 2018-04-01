@@ -21,7 +21,15 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".LogosInfoActivity"></activity>
+        <activity android:name=".LogosInfoActivity" />
+        <activity
+            android:name=".iDOmSettingsActivity"
+            android:label="@string/title_activity_i_dom_settings"
+            android:parentActivityName=".MainActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.example.jacekmichalik.idomapp.MainActivity" />
+        </activity>
     </application>
 
 </manifest>
