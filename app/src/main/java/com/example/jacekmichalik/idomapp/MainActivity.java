@@ -1,20 +1,31 @@
 package com.example.jacekmichalik.idomapp;
 
+import android.Manifest;
+import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
-import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.graphics.drawable.DrawableCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.telephony.SmsManager;
+import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -36,23 +47,85 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.LinkedList;
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import butterknife.OnClick;
 
+import static android.app.PendingIntent.getActivity;
 import static android.view.View.VISIBLE;
+import static java.lang.Thread.sleep;
 
-public class MainActivity extends AppCompatActivity {
 
+class RowMacroItem {
 
-    private LinkedList<String> macroNamesList = new LinkedList<>();
-    private LinkedList<Integer> macroIDList = new LinkedList<>();
+    public int macro_id;
+    public String macro_name;
 
-    private String allLogs = ""; // pobrana historia z serwera
-    private boolean isPartyActive = false; // pobrane z serwera
+    public RowMacroItem() {
+    }
+
+    public RowMacroItem(int macro_id, String macro_name) {
+
+        this.macro_id = macro_id;
+        this.macro_name = macro_name;
+    }
+}
+
+class RowMacroAdapter extends ArrayAdapter<RowMacroItem> {
+
+    Context context;
+    int rowLayoutResourceId;
+    LinkedList<RowMacroItem> macros = null;
+
+    public RowMacroAdapter(Context context, int rowLayoutResourceId, LinkedList<RowMacroItem> data) {
+        super(context, rowLayoutResourceId, data);
+        this.rowLayoutResourceId = rowLayoutResourceId;
+        this.context = context;
+        this.macros = data;
+    }
+
+    @Override
+    public View getView(int position, View convertView, ViewGroup parent) {
+        View row = convertView;
+        RowMacroHolder holder = null;
+
+        if (row == null) {
+            LayoutInflater inflater = LayoutInflater.from(getContext());
+            row = inflater.inflate(rowLayoutResourceId, parent, false);
+
+            holder = new RowMacroHolder();
+            holder.imgIcon = (ImageView) row.findViewById(R.id.run_macro_image);
+            holder.txtTitle = (TextView) row.findViewById(R.id.row_macro_name);
+            row.setTag(holder);
+        } else {
+            holder = (RowMacroHolder) row.getTag();
+        }
+
+        RowMacroItem object = macros.get(position);
+        holder.txtTitle.setText(object.macro_name);
+        holder.imgIcon.setImageResource(android.R.drawable.ic_media_ff);
+        return row;
+    }
+
+    static class RowMacroHolder {
+        ImageView imgIcon;
+        TextView txtTitle;
+    }
+}
+
+public class MainActivity extends AppCompatActivity implements SmsHandler{
+
+    final static int MY_PERMISSIONS_REQUEST_SEND_SMS = 991;
+
+    private LinkedList<RowMacroItem> macrosList = new LinkedList<>();   // lista pobranych makr
+    private String allLogs = ""; // historia pobrana z serwera
+    private boolean isPartyActive = false; // status Party pobrany z serwera
 
     public static String IDOM_WWW = "http://192.168.1.100/";
+
+    // zmienne robocze klasy
+    LinkedList<RequestQueue> runningProcesses = new LinkedList<>(); // lista wątków aktualizacji
 
     // kompoenty
     @BindView(R.id.macroListView)
@@ -74,22 +147,24 @@ public class MainActivity extends AppCompatActivity {
     @BindView(R.id.moreLogsImage)
     ImageView allLogsImage;
 
-    private int pendingProcessCount = 0;
 
-    private void updateProgressCounter(boolean incCounter) {
-        if (incCounter)
-            pendingProcessCount++;
-        else if (pendingProcessCount > 0)
-            pendingProcessCount--;
+    private void updateProgressCounter(RequestQueue job) {
 
-        if (pendingProcessCount > 0) {
+        // pierwsze wywołanie - dodaje do listy
+        // kolejne - usuwa z listy
+
+        if (runningProcesses.contains(job)) {
+            // usuń z listy
+            runningProcesses.removeLastOccurrence(job);
+            if (runningProcesses.size() <= 0) {
+                progressBar.setVisibility(View.INVISIBLE);
+            }
+        } else {
+            runningProcesses.add(job);
             // coś się mieli w tle - pokaż licznik
             if (progressBar.getVisibility() != View.VISIBLE)
                 progressBar.setVisibility(VISIBLE);
-        } else {
-            progressBar.setVisibility(View.INVISIBLE);
         }
-
     }
 
     @Override
@@ -102,7 +177,6 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         IDOM_WWW = prefs.getString("json_serwver", IDOM_WWW);
 
@@ -111,19 +185,40 @@ public class MainActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+                SharedPreferences sms_prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+                String tn = sms_prefs.getString("phone_num", "");
+
+                if (!checkMyPermission(Manifest.permission.SEND_SMS)) {
+                    Toast.makeText(getBaseContext(), "Brak pozwoleń: SEND_SMS", Toast.LENGTH_LONG).show();
+                    return;
+                }
+
+                if (!checkMyPermission(Manifest.permission.READ_PHONE_STATE)) {
+                    Toast.makeText(getBaseContext(), "Brak pozwoleń: READ_PHONE_STATE", Toast.LENGTH_LONG).show();
+                    return;
+                }
+
+//                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+//                        .setAction("Action", null).show();
+                SmsManager sms = SmsManager.getDefault();
+                try {
+                    sms.sendTextMessage(tn, null, "status", null, null);
+                } catch (Exception e) {
+                    Toast.makeText(getBaseContext(), "Exc:" + e.toString(), Toast.LENGTH_LONG).show();
+                    return;
+                }
+                Toast.makeText(getBaseContext(), "Wysłano zapytanie @" + tn, Toast.LENGTH_SHORT).show();
             }
         });
 
-        fab.setVisibility(View.GONE);
+//        fab.setVisibility(View.GONE);
 
         macroListView.setOnItemClickListener(
                 new AdapterView.OnItemClickListener() {
                     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                        int macroID = macroIDList.get(position);
-                        String macroName = macroNamesList.get(position);
-                        runMacro(macroID, macroName);
+                        RowMacroItem macro = macrosList.get(position);
+//                        String macroName = macroNamesList.get(position);
+                        runMacro(macro.macro_id, macro.macro_name);
                     }
                 }
         );
@@ -136,12 +231,84 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        lastEntryInfo.setText("pobieram dane:"+IDOM_WWW);
+        /* Register the broadcast receiver */
+        registerSmsListener();
+
+        /* Make sure, we have the permissions */
+        requestSmsPermission();
+
+        lastEntryInfo.setText("pobieram dane:" + IDOM_WWW);
         tempOutInfo.setText("");
         tempINInfo.setText("");
         importMacrosList();
         importSysInfo();
 
+    }
+
+    private boolean checkMyPermission(String perm) {
+        if (Build.VERSION.SDK_INT < 23)
+            return true;
+
+
+        if (ActivityCompat.checkSelfPermission(this, perm)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            // Permission is not granted
+            // Should we show an explanation?
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                    Manifest.permission.SEND_SMS)) {
+
+                // Show an explanation to the user *asynchronously* -- don't block
+                // this thread waiting for the user's response! After the user
+                // sees the explanation, try again to request the permission.
+                Toast.makeText(getBaseContext(), "no way to send SMS", Toast.LENGTH_LONG).show();
+                return false;
+            } else {
+
+                Toast.makeText(getBaseContext(), "wywyłam prośbę o zgodę:" + perm, Toast.LENGTH_LONG).show();
+
+                // No explanation needed; request the permission
+                ActivityCompat.requestPermissions(this,
+                        new String[]{perm},
+                        MY_PERMISSIONS_REQUEST_SEND_SMS);
+
+                // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
+                // app-defined int constant. The callback method gets the
+                // result of the request.
+                return false;
+            }
+        } else {
+            return true;
+        }
+    }
+
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case MY_PERMISSIONS_REQUEST_SEND_SMS: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+                    // permission was granted, yay! Do the
+                    // contacts-related task you need to do.
+                    Toast.makeText(getBaseContext(), "właśnie dostałeś zgodę", Toast.LENGTH_LONG).show();
+
+
+                } else {
+
+                    Toast.makeText(getBaseContext(), "ZAKAZANO WYSYŁKI", Toast.LENGTH_LONG).show();
+                    // permission denied, boo! Disable the
+                    // functionality that depends on this permission.
+                }
+                return;
+            }
+
+            // other 'case' lines to check for other
+            // permissions this app might request.
+        }
     }
 
     @Override
@@ -161,7 +328,7 @@ public class MainActivity extends AppCompatActivity {
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             Intent configActivity;
-            configActivity = new Intent(this , iDOmSettingsActivity.class );
+            configActivity = new Intent(this, iDOmSettingsActivity.class);
             startActivity(configActivity);
             return true;
         }
@@ -172,52 +339,49 @@ public class MainActivity extends AppCompatActivity {
 
     private void importMacrosList() {
 
-        RequestQueue queue = Volley.newRequestQueue(this);
-        String url = IDOM_WWW+"JSON/@GETMACROS";
+        final RequestQueue queue = Volley.newRequestQueue(this);
+        String url = IDOM_WWW + "JSON/@GETMACROS";
+        final StringRequest stringRequest =
+                new StringRequest(Request.Method.GET, url,
+                        new Response.Listener<String>() {
+                            @Override
+                            public void onResponse(String response) {
+                                JSONArray ja;
+                                JSONObject jo;
+                                try {
+                                    ja = new JSONArray(response);
+                                    for (int i = 0; i < ja.length(); i++) {
+                                        jo = ja.getJSONObject(i);
+                                        macrosList.add(new RowMacroItem(
+                                                jo.getInt("id"),
+                                                jo.getString("name")));
+                                    }
+                                } catch (JSONException e) {
+                                    macrosList.add(new RowMacroItem(0, "bad JSON"));
+                                }
 
-        updateProgressCounter(true);
-        StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
-                new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                        // Display the first 500 characters of the response string.
-//                        mTextView.setText("Response is: "+ response.substring(0,500));
-                        JSONArray ja;
-                        JSONObject jo;
-                        try {
-                            ja = new JSONArray(response);
-                            for (int i = 0; i < ja.length(); i++) {
-                                jo = ja.getJSONObject(i);
-                                macroNamesList.add(jo.getString("name"));
-                                macroIDList.add(jo.getInt("id"));
+                                RowMacroAdapter adapter = new RowMacroAdapter(getBaseContext(),
+                                        R.layout.macro_row_item, macrosList);
+                                macroListView.setAdapter(adapter);
+                                updateProgressCounter(queue);
+
                             }
-                        } catch (JSONException e) {
-                            macroNamesList.add("bad JSON!");
-                        }
-
-                        macroListView.setAdapter(new ArrayAdapter<>(getBaseContext(), android.R.layout.simple_list_item_activated_1, macroNamesList));
-                        updateProgressCounter(false);
-
+                        }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        updateProgressCounter(queue);
                     }
-                }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                macroNamesList.add("error");
-                macroNamesList.add(error.toString());
-//                mTextView.setText("That didn't work!");
-                updateProgressCounter(false);
-            }
-        });
+                });
+        updateProgressCounter(queue);
         queue.add(stringRequest);
     }
 
     private void importSysInfo() {
 
-        RequestQueue queue = Volley.newRequestQueue(this);
-        String url = IDOM_WWW+"JSON/@GETINFO";
-
-        updateProgressCounter(true);
-        StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
+        final RequestQueue queue = Volley.newRequestQueue(this);
+//        String url = "http://192.168.32.32/" + "JSON/@GETINFO";
+        String url = IDOM_WWW + "JSON/@GETINFO";
+        final StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
@@ -238,7 +402,8 @@ public class MainActivity extends AppCompatActivity {
                         {
                             tempOutInfo.setText("bad getInfo JSON !");
                         }
-                        updateProgressCounter(false);
+                        updateProgressCounter(queue);
+//                        updateProgressCounter(true);
                         if (isPartyActive)
                             DrawableCompat.setTint(
                                     partyModeImage.getDrawable(),
@@ -250,16 +415,13 @@ public class MainActivity extends AppCompatActivity {
 
 
                     }
-                }, new Response.ErrorListener()
-
-        {
+                }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                macroNamesList.add("error");
-                macroNamesList.add(error.toString());
-//                mTextView.setText("That didn't work!");
+                updateProgressCounter(queue);
             }
         });
+        updateProgressCounter(queue);
         queue.add(stringRequest);
     }
 
@@ -286,5 +448,34 @@ public class MainActivity extends AppCompatActivity {
         queue.add(stringRequest);
     }
 
+    @Override
+    public void handleSms(String sender, String message) {
+
+        try{
+//            Toast.makeText(this,"SMS from: " + sender + "\n\n"+message,Toast.LENGTH_LONG).show();
+            lastEntryInfo.setText("SMS"+sender+" "+message);
+        }
+        catch (Exception e){
+            Log.d("catch", e.toString());
+        }
+    }
+
+    private void registerSmsListener() {
+        IntentFilter filter = new IntentFilter();
+        filter.addAction("android.provider.Telephony.SMS_RECEIVED");
+        /* filter.setPriority(999); This is optional. */
+        SMS_Czytacz receiver = new SMS_Czytacz(this,getBaseContext());
+        registerReceiver(receiver, filter);
+    }
+
+    private void requestSmsPermission() {
+        String permission = Manifest.permission.RECEIVE_SMS;
+        int grant = ContextCompat.checkSelfPermission(this, permission);
+        if ( grant != PackageManager.PERMISSION_GRANTED) {
+            String[] permission_list = new String[1];
+            permission_list[0] = permission;
+            ActivityCompat.requestPermissions(this, permission_list, 1);
+        }
+    }
 
 }

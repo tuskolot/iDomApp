@@ -9,7 +9,6 @@
     <!-- NOTE: EditTextPreference accepts EditText attributes. -->
     <!-- NOTE: EditTextPreference's summary should be set to its value by the activity code. -->
     <EditTextPreference
-        android:capitalize="words"
         android:defaultValue="@string/pref_default_json_server"
         android:inputType="textUri"
         android:key="json_serwver"
@@ -18,4 +17,12 @@
         android:singleLine="true"
         android:title="@string/pref_title_json_server" />
 
+    <EditTextPreference
+        android:defaultValue="+48791840947"
+        android:inputType="text|phone"
+        android:key="phone_num"
+        android:maxLines="1"
+        android:selectAllOnFocus="false"
+        android:singleLine="true"
+        android:title="@string/pref_title_phone_num" />
 </PreferenceScreen>

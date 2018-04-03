@@ -15,11 +15,14 @@
     <string name="pref_title_json_server">Adres serwera</string>
     <string name="pref_default_json_server">http://192.168.1.100/</string>
 
+    <string name="pref_title_phone_num">Nr telefonu centralki</string>
+
 
     <!-- Example settings for Default screen -->
     <string name="pref_header_default_screen">Domyslny ekran startowy</string>
 
     <string name="pref_title_default_screen">Domyślny ekran</string>
+    <string name="run_macro_text">go</string>
     <string-array name="pref_screens_names">
         <item>parter</item>
         <item>piętro</item>

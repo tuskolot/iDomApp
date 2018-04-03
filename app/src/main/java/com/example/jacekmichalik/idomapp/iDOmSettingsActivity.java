@@ -168,6 +168,7 @@ public class iDOmSettingsActivity extends AppCompatPreferenceActivity {
             // updated to reflect the new value, per the Android Design
             // guidelines.
             bindPreferenceSummaryToValue(findPreference("json_serwver"));
+            bindPreferenceSummaryToValue(findPreference("phone_num"));
 //            bindPreferenceSummaryToValue(findPreference("example_list"));
         }
 
