@@ -7,7 +7,9 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -48,6 +50,8 @@ import org.json.JSONObject;
 
 import java.util.LinkedList;
 import java.util.List;
+
+import android.content.DialogInterface;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -114,7 +118,7 @@ class RowMacroAdapter extends ArrayAdapter<RowMacroItem> {
     }
 }
 
-public class MainActivity extends AppCompatActivity implements SmsHandler{
+public class MainActivity extends AppCompatActivity implements SmsHandler {
 
     final static int MY_PERMISSIONS_REQUEST_SEND_SMS = 991;
 
@@ -187,6 +191,11 @@ public class MainActivity extends AppCompatActivity implements SmsHandler{
             public void onClick(View view) {
                 SharedPreferences sms_prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
                 String tn = sms_prefs.getString("phone_num", "");
+
+                if (showPromptMsg("Pytanie", "Wysłać zapytanie?")) {
+                    Toast.makeText(getBaseContext(), "Zaniechano wysyłki SMS", Toast.LENGTH_LONG).show();
+                    return;
+                }
 
                 if (!checkMyPermission(Manifest.permission.SEND_SMS)) {
                     Toast.makeText(getBaseContext(), "Brak pozwoleń: SEND_SMS", Toast.LENGTH_LONG).show();
@@ -451,11 +460,19 @@ public class MainActivity extends AppCompatActivity implements SmsHandler{
     @Override
     public void handleSms(String sender, String message) {
 
-        try{
-//            Toast.makeText(this,"SMS from: " + sender + "\n\n"+message,Toast.LENGTH_LONG).show();
-            lastEntryInfo.setText("SMS"+sender+" "+message);
-        }
-        catch (Exception e){
+        try {
+            SharedPreferences sms_prefs = PreferenceManager.getDefaultSharedPreferences(this);
+            String tn = sms_prefs.getString("phone_num", "");
+
+
+            if (sender.equals(tn)) {
+                Toast.makeText(this, "STATUS:\n\n" + message, Toast.LENGTH_LONG).show();
+            } else {
+
+                Toast.makeText(this, "nieznany nadawca SMS: " + sender, Toast.LENGTH_LONG).show();
+//            lastEntryInfo.setText("SMS"+sender+" "+message);
+            }
+        } catch (Exception e) {
             Log.d("catch", e.toString());
         }
     }
@@ -464,18 +481,49 @@ public class MainActivity extends AppCompatActivity implements SmsHandler{
         IntentFilter filter = new IntentFilter();
         filter.addAction("android.provider.Telephony.SMS_RECEIVED");
         /* filter.setPriority(999); This is optional. */
-        SMS_Czytacz receiver = new SMS_Czytacz(this,getBaseContext());
+        SMS_Czytacz receiver = new SMS_Czytacz(this);
         registerReceiver(receiver, filter);
     }
 
     private void requestSmsPermission() {
         String permission = Manifest.permission.RECEIVE_SMS;
         int grant = ContextCompat.checkSelfPermission(this, permission);
-        if ( grant != PackageManager.PERMISSION_GRANTED) {
+        if (grant != PackageManager.PERMISSION_GRANTED) {
             String[] permission_list = new String[1];
             permission_list[0] = permission;
             ActivityCompat.requestPermissions(this, permission_list, 1);
         }
     }
 
+
+    private boolean showPromptMsg(String prompt_title, String prompt_msg) {
+
+        final String res = " ";
+        android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
+        builder.setPositiveButton("TAK", new android.content.DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                // Stuff to do
+                res.trim();
+                mb("wybrano TAK");
+            }
+        });
+        builder.setNegativeButton("NIE", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                // Stuff to do
+            }
+        });
+
+        builder.setMessage(prompt_msg);
+        builder.setTitle(prompt_title);
+
+        android.app.AlertDialog d = builder.create();
+        d.show();
+        mb("zwracam:["+res+"]");
+        return res.equals("");
+    }
+    private void mb(String msg){
+        Toast.makeText(this,msg,Toast.LENGTH_LONG).show();
+    }
 }
