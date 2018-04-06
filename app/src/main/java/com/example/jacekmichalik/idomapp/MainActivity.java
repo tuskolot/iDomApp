@@ -337,6 +337,8 @@ public class MainActivity extends AppCompatActivity implements SmsHandler {
 
         final RequestQueue queue = Volley.newRequestQueue(this);
         String url = IDOM_WWW + "JSON/@GETMACROS";
+        macrosList.add(new RowMacroItem(MACROID_SEND_STATUS_REQUEST, "pobierz status"));
+
         final StringRequest stringRequest =
                 new StringRequest(Request.Method.GET, url,
                         new Response.Listener<String>() {
@@ -366,11 +368,12 @@ public class MainActivity extends AppCompatActivity implements SmsHandler {
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         updateProgressCounter(queue);
+                        RowMacroAdapter adapter = new RowMacroAdapter(getBaseContext(),
+                                R.layout.macro_row_item, macrosList);
+                        macroListView.setAdapter(adapter);
                     }
                 });
         updateProgressCounter(queue);
-        RowMacroItem m = new RowMacroItem(MACROID_SEND_STATUS_REQUEST, "pobierz status");
-        macrosList.add(m);
         queue.add(stringRequest);
     }
 
