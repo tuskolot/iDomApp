@@ -2,6 +2,8 @@ package com.example.jacekmichalik.idomapp;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.DialogFragment;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -58,6 +60,7 @@ import butterknife.ButterKnife;
 
 import static android.app.PendingIntent.getActivity;
 import static android.view.View.VISIBLE;
+import static com.example.jacekmichalik.idomapp.iDOmSettingsActivity.CNF_PHONE_NUMBER;
 import static java.lang.Thread.sleep;
 
 
@@ -121,6 +124,7 @@ class RowMacroAdapter extends ArrayAdapter<RowMacroItem> {
 public class MainActivity extends AppCompatActivity implements SmsHandler {
 
     final static int MY_PERMISSIONS_REQUEST_SEND_SMS = 991;
+    final static int MACROID_SEND_STATUS_REQUEST = 1001;   //  "makro" - wyślij SMS z zapytaniem o status
 
     private LinkedList<RowMacroItem> macrosList = new LinkedList<>();   // lista pobranych makr
     private String allLogs = ""; // historia pobrana z serwera
@@ -188,51 +192,29 @@ public class MainActivity extends AppCompatActivity implements SmsHandler {
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view) {
-                SharedPreferences sms_prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
-                String tn = sms_prefs.getString("phone_num", "");
-
-                if (showPromptMsg("Pytanie", "Wysłać zapytanie?")) {
-                    Toast.makeText(getBaseContext(), "Zaniechano wysyłki SMS", Toast.LENGTH_LONG).show();
-                    return;
-                }
-
-                if (!checkMyPermission(Manifest.permission.SEND_SMS)) {
-                    Toast.makeText(getBaseContext(), "Brak pozwoleń: SEND_SMS", Toast.LENGTH_LONG).show();
-                    return;
-                }
-
-                if (!checkMyPermission(Manifest.permission.READ_PHONE_STATE)) {
-                    Toast.makeText(getBaseContext(), "Brak pozwoleń: READ_PHONE_STATE", Toast.LENGTH_LONG).show();
-                    return;
-                }
+            public void onClick(final View view) {
 
 //                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
 //                        .setAction("Action", null).show();
-                SmsManager sms = SmsManager.getDefault();
-                try {
-                    sms.sendTextMessage(tn, null, "status", null, null);
-                } catch (Exception e) {
-                    Toast.makeText(getBaseContext(), "Exc:" + e.toString(), Toast.LENGTH_LONG).show();
-                    return;
-                }
-                Toast.makeText(getBaseContext(), "Wysłano zapytanie @" + tn, Toast.LENGTH_SHORT).show();
             }
         });
 
-//        fab.setVisibility(View.GONE);
+
+        fab.setVisibility(View.GONE);
 
         macroListView.setOnItemClickListener(
-                new AdapterView.OnItemClickListener() {
+                new AdapterView.OnItemClickListener()
+
+                {
                     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                         RowMacroItem macro = macrosList.get(position);
-//                        String macroName = macroNamesList.get(position);
                         runMacro(macro.macro_id, macro.macro_name);
                     }
                 }
         );
 
-        allLogsImage.setOnClickListener(new View.OnClickListener() {
+        allLogsImage.setOnClickListener(new View.OnClickListener()
+        {
             public void onClick(View v) {
                 Intent moreLogs = new Intent(getBaseContext(), LogosInfoActivity.class);
                 moreLogs.putExtra("logs", allLogs);
@@ -246,10 +228,16 @@ public class MainActivity extends AppCompatActivity implements SmsHandler {
         /* Make sure, we have the permissions */
         requestSmsPermission();
 
+        checkMyPermission(Manifest.permission.SEND_SMS);
+
+        checkMyPermission(Manifest.permission.READ_PHONE_STATE);
+
         lastEntryInfo.setText("pobieram dane:" + IDOM_WWW);
         tempOutInfo.setText("");
         tempINInfo.setText("");
+
         importMacrosList();
+
         importSysInfo();
 
     }
@@ -257,8 +245,6 @@ public class MainActivity extends AppCompatActivity implements SmsHandler {
     private boolean checkMyPermission(String perm) {
         if (Build.VERSION.SDK_INT < 23)
             return true;
-
-
         if (ActivityCompat.checkSelfPermission(this, perm)
                 != PackageManager.PERMISSION_GRANTED) {
 
@@ -327,6 +313,7 @@ public class MainActivity extends AppCompatActivity implements SmsHandler {
         return true;
     }
 
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar item clicks here. The action bar will
@@ -382,13 +369,14 @@ public class MainActivity extends AppCompatActivity implements SmsHandler {
                     }
                 });
         updateProgressCounter(queue);
+        RowMacroItem m = new RowMacroItem(MACROID_SEND_STATUS_REQUEST, "pobierz status");
+        macrosList.add(m);
         queue.add(stringRequest);
     }
 
     private void importSysInfo() {
 
         final RequestQueue queue = Volley.newRequestQueue(this);
-//        String url = "http://192.168.32.32/" + "JSON/@GETINFO";
         String url = IDOM_WWW + "JSON/@GETINFO";
         final StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
                 new Response.Listener<String>() {
@@ -405,14 +393,10 @@ public class MainActivity extends AppCompatActivity implements SmsHandler {
                             allLogs = jo.getString("lastlogs");
                             iDomInfo.setText(allLogs);
 
-                        } catch (
-                                Exception e)
-
-                        {
+                        } catch (Exception e) {
                             tempOutInfo.setText("bad getInfo JSON !");
                         }
                         updateProgressCounter(queue);
-//                        updateProgressCounter(true);
                         if (isPartyActive)
                             DrawableCompat.setTint(
                                     partyModeImage.getDrawable(),
@@ -440,21 +424,52 @@ public class MainActivity extends AppCompatActivity implements SmsHandler {
         RequestQueue queue = Volley.newRequestQueue(this);
         String url = IDOM_WWW + "JSON/@RUNMACRO$" + macroID;
 
-        StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
-                new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                        Toast.makeText(getBaseContext(), macroName + " uruchomione", Toast.LENGTH_SHORT).show();
-                        importSysInfo();
-                    }
-                },
-                new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Toast.makeText(getBaseContext(), macroName + " BŁĄD WYKONANIA", Toast.LENGTH_LONG).show();
-                    }
-                });
-        queue.add(stringRequest);
+        if (macroID > 999) {
+            switch (macroID) {
+                case MACROID_SEND_STATUS_REQUEST: {
+
+                    SharedPreferences sms_prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+                    final String tn = sms_prefs.getString(CNF_PHONE_NUMBER, "");
+                    MessageBox.ask(this, "Pytanie?", "Wysłać SMS do centralki?", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int id) {
+                            SmsManager sms = SmsManager.getDefault();
+                            try {
+                                sms.sendTextMessage(tn, null, "status", null, null);
+                                mb("Wysłano zapytanie @" + tn);
+                            } catch (Exception e) {
+                                mb("Exc:" + e.toString());
+                                return;
+                            }
+
+                        }
+                    });
+
+
+                }
+                break;
+
+            }
+
+            //
+        } else {
+
+            StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
+                    new Response.Listener<String>() {
+                        @Override
+                        public void onResponse(String response) {
+                            Toast.makeText(getBaseContext(), macroName + " uruchomione", Toast.LENGTH_SHORT).show();
+                            importSysInfo();
+                        }
+                    },
+                    new Response.ErrorListener() {
+                        @Override
+                        public void onErrorResponse(VolleyError error) {
+                            Toast.makeText(getBaseContext(), macroName + " BŁĄD WYKONANIA", Toast.LENGTH_LONG).show();
+                        }
+                    });
+            queue.add(stringRequest);
+        }
     }
 
     @Override
@@ -462,15 +477,11 @@ public class MainActivity extends AppCompatActivity implements SmsHandler {
 
         try {
             SharedPreferences sms_prefs = PreferenceManager.getDefaultSharedPreferences(this);
-            String tn = sms_prefs.getString("phone_num", "");
-
+            String tn = sms_prefs.getString(CNF_PHONE_NUMBER, "");
 
             if (sender.equals(tn)) {
-                Toast.makeText(this, "STATUS:\n\n" + message, Toast.LENGTH_LONG).show();
+                MessageBox.show(this, "Info:" + sender, message);
             } else {
-
-                Toast.makeText(this, "nieznany nadawca SMS: " + sender, Toast.LENGTH_LONG).show();
-//            lastEntryInfo.setText("SMS"+sender+" "+message);
             }
         } catch (Exception e) {
             Log.d("catch", e.toString());
@@ -495,35 +506,7 @@ public class MainActivity extends AppCompatActivity implements SmsHandler {
         }
     }
 
-
-    private boolean showPromptMsg(String prompt_title, String prompt_msg) {
-
-        final String res = " ";
-        android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
-        builder.setPositiveButton("TAK", new android.content.DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                // Stuff to do
-                res.trim();
-                mb("wybrano TAK");
-            }
-        });
-        builder.setNegativeButton("NIE", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                // Stuff to do
-            }
-        });
-
-        builder.setMessage(prompt_msg);
-        builder.setTitle(prompt_title);
-
-        android.app.AlertDialog d = builder.create();
-        d.show();
-        mb("zwracam:["+res+"]");
-        return res.equals("");
-    }
-    private void mb(String msg){
-        Toast.makeText(this,msg,Toast.LENGTH_LONG).show();
+    private void mb(String msg) {
+        Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
     }
 }

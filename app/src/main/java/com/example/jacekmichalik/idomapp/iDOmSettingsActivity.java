@@ -35,6 +35,7 @@ import java.util.List;
  */
 public class iDOmSettingsActivity extends AppCompatPreferenceActivity {
 
+    final public static String CNF_PHONE_NUMBER = "phone_number";
     /**
      * A preference value change listener that updates the preference's summary
      * to reflect its new value.
@@ -168,7 +169,7 @@ public class iDOmSettingsActivity extends AppCompatPreferenceActivity {
             // updated to reflect the new value, per the Android Design
             // guidelines.
             bindPreferenceSummaryToValue(findPreference("json_serwver"));
-            bindPreferenceSummaryToValue(findPreference("phone_num"));
+            bindPreferenceSummaryToValue(findPreference(CNF_PHONE_NUMBER));
 //            bindPreferenceSummaryToValue(findPreference("example_list"));
         }
 

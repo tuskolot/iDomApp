@@ -18,9 +18,9 @@
         android:title="@string/pref_title_json_server" />
 
     <EditTextPreference
-        android:defaultValue="+48791840947"
-        android:inputType="text|phone"
-        android:key="phone_num"
+        android:defaultValue=""
+        android:inputType="textNoSuggestions"
+        android:key="phone_number"
         android:maxLines="1"
         android:selectAllOnFocus="false"
         android:singleLine="true"
