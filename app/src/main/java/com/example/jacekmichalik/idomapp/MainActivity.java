@@ -11,6 +11,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Color;
+import android.graphics.pdf.PdfDocument;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -18,9 +19,11 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.graphics.drawable.DrawableCompat;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.telephony.SmsManager;
@@ -60,120 +63,23 @@ import butterknife.ButterKnife;
 
 import static android.app.PendingIntent.getActivity;
 import static android.view.View.VISIBLE;
+import static com.example.jacekmichalik.idomapp.PagesAdapter.PAGE_MACROS;
 import static com.example.jacekmichalik.idomapp.iDOmSettingsActivity.CNF_PHONE_NUMBER;
 import static java.lang.Thread.sleep;
 
 
-class RowMacroItem {
 
-    public int macro_id;
-    public String macro_name;
-
-    public RowMacroItem() {
-    }
-
-    public RowMacroItem(int macro_id, String macro_name) {
-
-        this.macro_id = macro_id;
-        this.macro_name = macro_name;
-    }
-}
-
-class RowMacroAdapter extends ArrayAdapter<RowMacroItem> {
-
-    Context context;
-    int rowLayoutResourceId;
-    LinkedList<RowMacroItem> macros = null;
-
-    public RowMacroAdapter(Context context, int rowLayoutResourceId, LinkedList<RowMacroItem> data) {
-        super(context, rowLayoutResourceId, data);
-        this.rowLayoutResourceId = rowLayoutResourceId;
-        this.context = context;
-        this.macros = data;
-    }
-
-    @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
-        View row = convertView;
-        RowMacroHolder holder = null;
-
-        if (row == null) {
-            LayoutInflater inflater = LayoutInflater.from(getContext());
-            row = inflater.inflate(rowLayoutResourceId, parent, false);
-
-            holder = new RowMacroHolder();
-            holder.imgIcon = (ImageView) row.findViewById(R.id.run_macro_image);
-            holder.txtTitle = (TextView) row.findViewById(R.id.row_macro_name);
-            row.setTag(holder);
-        } else {
-            holder = (RowMacroHolder) row.getTag();
-        }
-
-        RowMacroItem object = macros.get(position);
-        holder.txtTitle.setText(object.macro_name);
-        holder.imgIcon.setImageResource(android.R.drawable.ic_media_ff);
-        return row;
-    }
-
-    static class RowMacroHolder {
-        ImageView imgIcon;
-        TextView txtTitle;
-    }
-}
 
 public class MainActivity extends AppCompatActivity implements SmsHandler {
 
     final static int MY_PERMISSIONS_REQUEST_SEND_SMS = 991;
-    final static int MACROID_SEND_STATUS_REQUEST = 1001;   //  "makro" - wyślij SMS z zapytaniem o status
-
-    private LinkedList<RowMacroItem> macrosList = new LinkedList<>();   // lista pobranych makr
-    private String allLogs = ""; // historia pobrana z serwera
-    private boolean isPartyActive = false; // status Party pobrany z serwera
-
-    public static String IDOM_WWW = "http://192.168.1.100/";
-
-    // zmienne robocze klasy
-    LinkedList<RequestQueue> runningProcesses = new LinkedList<>(); // lista wątków aktualizacji
-
-    // kompoenty
-    @BindView(R.id.macroListView)
-    ListView macroListView;
-    @BindView(R.id.tOutTV)
-    TextView tempOutInfo;
-    @BindView(R.id.tempIN_TV)
-    TextView tempINInfo;
-
-    @BindView(R.id.lastEntryTV)
-    TextView lastEntryInfo;
-    @BindView(R.id.iDomTV)
-    TextView iDomInfo;
-    @BindView(R.id.showLoadingProgress)
-    ProgressBar progressBar;
-    @BindView(R.id.partyImage)
-    ImageView partyModeImage;
-
-    @BindView(R.id.moreLogsImage)
-    ImageView allLogsImage;
+    private ViewPager   viewPager;
+    private static Context     tmpContext;
 
 
-    private void updateProgressCounter(RequestQueue job) {
+    public static SharedPreferences prefs = null;
+    public static IDOMDataManager IDOM = null;
 
-        // pierwsze wywołanie - dodaje do listy
-        // kolejne - usuwa z listy
-
-        if (runningProcesses.contains(job)) {
-            // usuń z listy
-            runningProcesses.removeLastOccurrence(job);
-            if (runningProcesses.size() <= 0) {
-                progressBar.setVisibility(View.INVISIBLE);
-            }
-        } else {
-            runningProcesses.add(job);
-            // coś się mieli w tle - pokaż licznik
-            if (progressBar.getVisibility() != View.VISIBLE)
-                progressBar.setVisibility(VISIBLE);
-        }
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -181,46 +87,26 @@ public class MainActivity extends AppCompatActivity implements SmsHandler {
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_main);
-        ButterKnife.bind(this);
+        tmpContext = this;
+
+        viewPager = (ViewPager) findViewById(R.id.viewpager);
+        PagesAdapter adapter = new PagesAdapter(getSupportFragmentManager());
+        // Set the adapter onto the view pager
+        viewPager.setAdapter(adapter);
+
+        // Give the TabLayout the ViewPager
+        TabLayout tabLayout = (TabLayout) findViewById(R.id.tabs);
+        tabLayout.setupWithViewPager(viewPager);
+        viewPager.setCurrentItem(PAGE_MACROS);
+
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        IDOM_WWW = prefs.getString("json_serwver", IDOM_WWW);
+        prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        ProgressBar sysProgressBar =(ProgressBar)findViewById(R.id.progressBar);
+        IDOM = new IDOMDataManager(sysProgressBar);
 
 
-        FloatingActionButton fab = findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(final View view) {
-
-//                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-//                        .setAction("Action", null).show();
-            }
-        });
-
-
-        fab.setVisibility(View.GONE);
-
-        macroListView.setOnItemClickListener(
-                new AdapterView.OnItemClickListener()
-
-                {
-                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                        RowMacroItem macro = macrosList.get(position);
-                        runMacro(macro.macro_id, macro.macro_name);
-                    }
-                }
-        );
-
-        allLogsImage.setOnClickListener(new View.OnClickListener()
-        {
-            public void onClick(View v) {
-                Intent moreLogs = new Intent(getBaseContext(), LogosInfoActivity.class);
-                moreLogs.putExtra("logs", allLogs);
-                startActivity(moreLogs);
-            }
-        });
 
         /* Register the broadcast receiver */
         registerSmsListener();
@@ -231,14 +117,6 @@ public class MainActivity extends AppCompatActivity implements SmsHandler {
         checkMyPermission(Manifest.permission.SEND_SMS);
 
         checkMyPermission(Manifest.permission.READ_PHONE_STATE);
-
-        lastEntryInfo.setText("pobieram dane:" + IDOM_WWW);
-        tempOutInfo.setText("");
-        tempINInfo.setText("");
-
-        importMacrosList();
-
-        importSysInfo();
 
     }
 
@@ -333,147 +211,6 @@ public class MainActivity extends AppCompatActivity implements SmsHandler {
     }
 
 
-    private void importMacrosList() {
-
-        final RequestQueue queue = Volley.newRequestQueue(this);
-        String url = IDOM_WWW + "JSON/@GETMACROS";
-        macrosList.add(new RowMacroItem(MACROID_SEND_STATUS_REQUEST, "pobierz status"));
-
-        final StringRequest stringRequest =
-                new StringRequest(Request.Method.GET, url,
-                        new Response.Listener<String>() {
-                            @Override
-                            public void onResponse(String response) {
-                                JSONArray ja;
-                                JSONObject jo;
-                                try {
-                                    ja = new JSONArray(response);
-                                    for (int i = 0; i < ja.length(); i++) {
-                                        jo = ja.getJSONObject(i);
-                                        macrosList.add(new RowMacroItem(
-                                                jo.getInt("id"),
-                                                jo.getString("name")));
-                                    }
-                                } catch (JSONException e) {
-                                    macrosList.add(new RowMacroItem(0, "bad JSON"));
-                                }
-
-                                RowMacroAdapter adapter = new RowMacroAdapter(getBaseContext(),
-                                        R.layout.macro_row_item, macrosList);
-                                macroListView.setAdapter(adapter);
-                                updateProgressCounter(queue);
-
-                            }
-                        }, new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        updateProgressCounter(queue);
-                        RowMacroAdapter adapter = new RowMacroAdapter(getBaseContext(),
-                                R.layout.macro_row_item, macrosList);
-                        macroListView.setAdapter(adapter);
-                    }
-                });
-        updateProgressCounter(queue);
-        queue.add(stringRequest);
-    }
-
-    private void importSysInfo() {
-
-        final RequestQueue queue = Volley.newRequestQueue(this);
-        String url = IDOM_WWW + "JSON/@GETINFO";
-        final StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
-                new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                        JSONObject jo;
-                        try {
-                            jo = new JSONObject(response);
-                            tempOutInfo.setText(jo.getString("tempout"));
-                            tempINInfo.setText(jo.getString("tempin"));
-
-                            lastEntryInfo.setText(jo.getString("lastgate"));
-                            isPartyActive = jo.getString("isparty").equals("X");
-                            allLogs = jo.getString("lastlogs");
-                            iDomInfo.setText(allLogs);
-
-                        } catch (Exception e) {
-                            tempOutInfo.setText("bad getInfo JSON !");
-                        }
-                        updateProgressCounter(queue);
-                        if (isPartyActive)
-                            DrawableCompat.setTint(
-                                    partyModeImage.getDrawable(),
-                                    ContextCompat.getColor(getApplicationContext(), R.color.colorAccent));
-                        else
-                            DrawableCompat.setTint(
-                                    partyModeImage.getDrawable(),
-                                    Color.LTGRAY);
-
-
-                    }
-                }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                updateProgressCounter(queue);
-            }
-        });
-        updateProgressCounter(queue);
-        queue.add(stringRequest);
-    }
-
-
-    private void runMacro(int macroID, final String macroName) {
-
-        RequestQueue queue = Volley.newRequestQueue(this);
-        String url = IDOM_WWW + "JSON/@RUNMACRO$" + macroID;
-
-        if (macroID > 999) {
-            switch (macroID) {
-                case MACROID_SEND_STATUS_REQUEST: {
-
-                    SharedPreferences sms_prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
-                    final String tn = sms_prefs.getString(CNF_PHONE_NUMBER, "");
-                    MessageBox.ask(this, "Pytanie?", "Wysłać SMS do centralki?", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int id) {
-                            SmsManager sms = SmsManager.getDefault();
-                            try {
-                                sms.sendTextMessage(tn, null, "status", null, null);
-                                mb("Wysłano zapytanie @" + tn);
-                            } catch (Exception e) {
-                                mb("Exc:" + e.toString());
-                                return;
-                            }
-
-                        }
-                    });
-
-
-                }
-                break;
-
-            }
-
-            //
-        } else {
-
-            StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
-                    new Response.Listener<String>() {
-                        @Override
-                        public void onResponse(String response) {
-                            Toast.makeText(getBaseContext(), macroName + " uruchomione", Toast.LENGTH_SHORT).show();
-                            importSysInfo();
-                        }
-                    },
-                    new Response.ErrorListener() {
-                        @Override
-                        public void onErrorResponse(VolleyError error) {
-                            Toast.makeText(getBaseContext(), macroName + " BŁĄD WYKONANIA", Toast.LENGTH_LONG).show();
-                        }
-                    });
-            queue.add(stringRequest);
-        }
-    }
 
     @Override
     public void handleSms(String sender, String message) {
@@ -494,7 +231,6 @@ public class MainActivity extends AppCompatActivity implements SmsHandler {
     private void registerSmsListener() {
         IntentFilter filter = new IntentFilter();
         filter.addAction("android.provider.Telephony.SMS_RECEIVED");
-        /* filter.setPriority(999); This is optional. */
         SMS_Czytacz receiver = new SMS_Czytacz(this);
         registerReceiver(receiver, filter);
     }
@@ -509,7 +245,8 @@ public class MainActivity extends AppCompatActivity implements SmsHandler {
         }
     }
 
-    private void mb(String msg) {
-        Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
+    public static void mb(String msg) {
+//        Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
+        Toast.makeText(tmpContext, msg, Toast.LENGTH_LONG).show();
     }
 }
