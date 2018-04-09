@@ -17,7 +17,7 @@ import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.jacekmichalik.idomapp.FloorMapPackage.FloorItemsList;
 import com.example.jacekmichalik.idomapp.FloorMapPackage.MySecurItemRecyclerViewAdapter;
-import com.example.jacekmichalik.idomapp.JMTools.MessageBox;
+import com.example.jacekmichalik.idomapp.JMTools.ProfStr;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -46,17 +46,13 @@ public class IDOMDataManager {
         String t = "";
         Calendar dat;
         Date dd;
-//        SimpleDateFormat dat_format = new SimpleDateFormat("yyyy-MM-dd");
-//        SimpleDateFormat dat_format = new SimpleDateFormat("yyyy-MM-dd");
         DateFormat dateFormat = DateFormat.getDateInstance(DateFormat.MEDIUM, Locale.getDefault());
         DateFormat timeFormat = DateFormat.getTimeInstance(DateFormat.SHORT, Locale.getDefault());
-
-//        SimpleDateFormat tim_format = new SimpleDateFormat("HH:mm:ss");
 
         if (!diag_on_error_add_sample_stats)
             return;
 
-        allLogs = "";
+        allLogs="";
 
         for (int i = 0; i < 60; i++) {
             if (Math.round(Math.random() * 100) < 10) {
@@ -88,7 +84,6 @@ public class IDOMDataManager {
             for (int i = 0; i < 3; i++) {
                 String fn = "pietro_" + i;
                 floorArray.add(fn);
-                floorMap.put(fn, new FloorItemsList(fn));
             }
         }
 
@@ -104,19 +99,19 @@ public class IDOMDataManager {
             return;
 
         for (int i = 0; i < 11; i++) {
-            macrosList.add(new RowMacroItem(i, "Przykładowe makro: " + i));
+            macrosList.add(new MacrosFragment.RowMacroItem(i, "Przykładowe makro: " + i));
         }
     }
 
 
-    public void diag_add_floors(String floor_name) {
+    public void diag_add_floors(String floor_name,boolean forceRefresh) {
 
         if (!diag_on_error_add_sample_floors)
             return;
 
         FloorItemsList fli = floorMap.get(floor_name);
 
-        if (fli.getSize() > 0)
+        if (fli.getSize() > 0 && !forceRefresh)
             return;
 
         int items = (int) Math.round(Math.random() * 10 + 3);
@@ -127,7 +122,7 @@ public class IDOMDataManager {
                             j % 3 == 0 ? "heater" : "light",
                             "Element:" + j,
                             "pokój:" + ( j ) % 4,
-                            j % 2 == 0 ? "X" : " "
+                            ProfStr.random_my(3) == 0 ? "X" : " "
                     ));
         }
         fli.sortMe();
@@ -135,7 +130,7 @@ public class IDOMDataManager {
     }
 
 
-    public LinkedList<RowMacroItem> macrosList = new LinkedList<>();   // lista pobranych makr
+    public LinkedList<MacrosFragment.RowMacroItem> macrosList = new LinkedList<>();   // lista pobranych makr
     public String allLogs = ""; // historia pobrana z serwera
     public boolean partyActive = false; // status Party pobrany z serwera
     public int tempIN = 0;      //  temperatura wew
@@ -184,21 +179,6 @@ public class IDOMDataManager {
         }
     }
 
-    public class RowMacroItem {
-
-        public int macro_id;
-        public String macro_name;
-
-        public RowMacroItem() {
-        }
-
-        public RowMacroItem(int macro_id, String macro_name) {
-
-            this.macro_id = macro_id;
-            this.macro_name = macro_name;
-        }
-    }
-
     public void updateProgressCounter(RequestQueue job) {
 
         // pierwsze wywołanie - dodaje do listy
@@ -232,8 +212,7 @@ public class IDOMDataManager {
 
         final RequestQueue queue = Volley.newRequestQueue(context);
 
-        macrosList.add(new RowMacroItem(MACROID_SEND_STATUS_REQUEST, "pobierz status"));
-
+        macrosList.add(new MacrosFragment.RowMacroItem(MACROID_SEND_STATUS_REQUEST, "pobierz status"));
 
         incDiags(IDOMTaskNotyfikator.GET_MACROS);
 
@@ -248,7 +227,7 @@ public class IDOMDataManager {
                                     ja = new JSONArray(response);
                                     for (int i = 0; i < ja.length(); i++) {
                                         jo = ja.getJSONObject(i);
-                                        macrosList.add(new RowMacroItem(
+                                        macrosList.add(new MacrosFragment.RowMacroItem(
                                                 jo.getInt("id"),
                                                 jo.getString("name")));
                                     }
@@ -271,15 +250,14 @@ public class IDOMDataManager {
         queue.add(stringRequest);
     }
 
-
-    public void importFloorList(Context context, final IDOMTaskNotyfikator idomTaskNotyfikator, final String floorName) {
+    public void importFloorList(Context context, final IDOMTaskNotyfikator idomTaskNotyfikator, final String floorName, final boolean forceRefresh) {
 
         String url = IDOM_WWW + "JSON/@GETFLOOR$" + floorName;
         final FloorItemsList floorItemsList = floorMap.get(floorName);
         if (null == floorItemsList)
             return;
 
-        if (floorItemsList.getSize() > 0) //  struktura była już wcześniej odczytana
+        if (floorItemsList.getSize() > 0 && !forceRefresh) //  struktura była już wcześniej odczytana
         {
             callNotyficator(idomTaskNotyfikator, IDOMTaskNotyfikator.GET_FLOOR, null);
             return;
@@ -297,6 +275,9 @@ public class IDOMDataManager {
                                 JSONArray ja;
                                 JSONObject jo;
                                 FloorItemsList.SecurItemData si;
+
+                                if ( forceRefresh )
+                                    floorItemsList.clearAll();
 
                                 try {
                                     ja = new JSONArray(response);
@@ -322,7 +303,7 @@ public class IDOMDataManager {
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         updateProgressCounter(queue);
-                        diag_add_floors(floorName);
+                        diag_add_floors(floorName,forceRefresh);
                         callNotyficator(idomTaskNotyfikator, IDOMTaskNotyfikator.GET_FLOOR, null);
 
                     }
@@ -331,12 +312,12 @@ public class IDOMDataManager {
         queue.add(stringRequest);
     }
 
-
     private void updateFloors(String floors) {
         int col;
         String t, v;
 
-        floorArray.clear();
+        if ( floorArray.size() > 0 )
+            return; // już raz pobraliśmy listę pięter. Ona się nie zmienia
 
         v = floors.trim();
         while (!v.isEmpty()) {
@@ -353,16 +334,23 @@ public class IDOMDataManager {
             v = v.trim();
             if (!t.isEmpty()) {
                 floorArray.add(t);
-                floorMap.put(t, new FloorItemsList(t));
+//                floorMap.put(t, new FloorItemsList(t));
             }
         }
     }
 
-    public void importSysInfo(Context context, final IDOMTaskNotyfikator idomTaskNotyfikator) {
+    public void importSysInfo(Context context, final IDOMTaskNotyfikator idomTaskNotyfikator, final boolean forceRefresh) {
 
-        final RequestQueue queue = Volley.newRequestQueue(context);
         String url = IDOM_WWW + "JSON/@GETINFO";
 
+        if ( allLogs.length() > 0 && !forceRefresh){
+            // już raz pobrano dane
+            callNotyficator(idomTaskNotyfikator, IDOMTaskNotyfikator.SYS_INFO, null);
+            sysChange();
+            return;
+        }
+
+        final RequestQueue queue = Volley.newRequestQueue(context);
         incDiags(IDOMTaskNotyfikator.SYS_INFO);
 
         final StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
@@ -395,13 +383,11 @@ public class IDOMDataManager {
                 callNotyficator(idomTaskNotyfikator, IDOMTaskNotyfikator.SYS_INFO, null);
                 sysChange();
                 updateProgressCounter(queue);
-
             }
         });
         updateProgressCounter(queue);
         queue.add(stringRequest);
     }
-
 
     public void runMacro(final Context context, int macroID, final String macroName, final IDOMTaskNotyfikator idomTaskNotyfikator) {
 
@@ -414,7 +400,7 @@ public class IDOMDataManager {
                 case MACROID_SEND_STATUS_REQUEST: {
 
                     final String tn = MainActivity.prefs.getString(CNF_PHONE_NUMBER, "");
-                    MessageBox.ask(context, "Pytanie?", "Wysłać SMS do centralki?", new DialogInterface.OnClickListener() {
+                    ProfStr.ask(context, "Pytanie?", "Wysłać SMS do centralki?", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int id) {
                             SmsManager sms = SmsManager.getDefault();
@@ -438,7 +424,7 @@ public class IDOMDataManager {
                         @Override
                         public void onResponse(String response) {
                             Toast.makeText(context, macroName + " uruchomione", Toast.LENGTH_SHORT).show();
-                            importSysInfo(context, idomTaskNotyfikator);
+                            importSysInfo(context, idomTaskNotyfikator,true);
                             callNotyficator(idomTaskNotyfikator, IDOMTaskNotyfikator.RUN_MACRO, null);
                         }
                     },
@@ -509,7 +495,6 @@ public class IDOMDataManager {
                         "RM: " + jsonStatsistics.get(IDOMTaskNotyfikator.RUN_MACRO) + "/" +
                         "GF: " + jsonStatsistics.get(IDOMTaskNotyfikator.GET_FLOOR);
     }
-
 
     public String getFloorName(int floor_idx) {
         if (floor_idx < 0 || floor_idx >= floorArray.size())

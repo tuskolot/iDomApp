@@ -10,6 +10,7 @@ import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -20,6 +21,7 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -29,7 +31,7 @@ import android.widget.Toast;
 
 import com.example.jacekmichalik.idomapp.FloorMapPackage.FloorItemsList;
 import com.example.jacekmichalik.idomapp.FloorMapPackage.SecurItemFragment;
-import com.example.jacekmichalik.idomapp.JMTools.MessageBox;
+import com.example.jacekmichalik.idomapp.JMTools.ProfStr;
 import com.example.jacekmichalik.idomapp.JMTools.SMS_Czytacz;
 import com.example.jacekmichalik.idomapp.JMTools.SmsHandler;
 
@@ -46,6 +48,7 @@ public class MainActivity extends AppCompatActivity
 
     final static int MY_PERMISSIONS_REQUEST_SEND_SMS = 991;
     private ViewPager   viewPager;
+    private FloatingActionButton fab;
     private PagesAdapter pagesAdapter;
     private static Context     tmpContext;
 
@@ -76,6 +79,17 @@ public class MainActivity extends AppCompatActivity
         prefs = PreferenceManager.getDefaultSharedPreferences(this);
 
         ProgressBar sysProgressBar =(ProgressBar)findViewById(R.id.progressBar);
+        fab = findViewById(R.id.floatingActionButton);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+//                mb("page: " + viewPager.getCurrentItem());
+
+                forceUpdatePageDate(viewPager.getCurrentItem());
+
+            }
+        });
+
 
         tempOutInfo =findViewById(R.id.tOutTV);
         tempINInfo = findViewById(R.id.tempIN_TV);
@@ -105,6 +119,14 @@ public class MainActivity extends AppCompatActivity
         checkMyPermission(Manifest.permission.SEND_SMS);
         checkMyPermission(Manifest.permission.READ_PHONE_STATE);
 
+    }
+
+    private void forceUpdatePageDate(int currentItem) {
+        Object o = pagesAdapter.instantiateItem(viewPager,viewPager.getCurrentItem());
+
+        if ( o instanceof IDOMTaskNotyfikator ){
+            ((IDOMTaskNotyfikator)o).forceUpdate();
+        }
     }
 
     private boolean checkMyPermission(String perm) {
@@ -205,7 +227,7 @@ public class MainActivity extends AppCompatActivity
             String tn = sms_prefs.getString(CNF_PHONE_NUMBER, "");
 
             if (sender.equals(tn)) {
-                MessageBox.show(this, "Info:" + sender, message);
+                ProfStr.show(this, "Info:" + sender, message);
             } else {
             }
         } catch (Exception e) {
@@ -260,7 +282,11 @@ public class MainActivity extends AppCompatActivity
             pagesAdapter.notifyDataSetChanged();
         }
 
-//        lastEntryInfo.setText(IDOM.getDiags());
+    }
+
+    @Override
+    public void forceUpdate() {
+
     }
 
     @Override

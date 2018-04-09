@@ -18,7 +18,8 @@ public class FloorItemsList implements Comparator<FloorItemsList.SecurItemData>{
     }
 
     public void addItem(SecurItemData item) {
-        siList.add(item);
+        if (item.type.equals("light"))
+            siList.add(item);
     }
 
     public SecurItemData get(int position){
@@ -28,6 +29,7 @@ public class FloorItemsList implements Comparator<FloorItemsList.SecurItemData>{
     public int getSize(){
         return siList.size();
     }
+    public void clearAll() { siList.clear(); }
 
     @Override
     public int compare(SecurItemData o1, SecurItemData o2) {
@@ -56,7 +58,7 @@ public class FloorItemsList implements Comparator<FloorItemsList.SecurItemData>{
     }
 
     public void sortMe(){
-        Collections.sort(siList,this);
+        Collections.sort(siList, this);
     }
 
     public static class SecurItemData {

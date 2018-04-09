@@ -103,6 +103,11 @@ public class MySecurItemRecyclerViewAdapter extends RecyclerView.Adapter<MySecur
 
     }
 
+    @Override
+    public void forceUpdate() {
+
+    }
+
     public class ViewHolder extends RecyclerView.ViewHolder {
         public final View mView;
 

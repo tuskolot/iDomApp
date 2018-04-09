@@ -21,13 +21,13 @@ import android.widget.Toast;
 import java.util.LinkedList;
 
 
-class RowMacroAdapter extends ArrayAdapter<IDOMDataManager.RowMacroItem> {
+class RowMacroAdapter extends ArrayAdapter<MacrosFragment.RowMacroItem> {
 
     Context context;
     int rowLayoutResourceId;
-    LinkedList<IDOMDataManager.RowMacroItem> macros = null;
+    LinkedList<MacrosFragment.RowMacroItem> macros = null;
 
-    public RowMacroAdapter(Context context, int rowLayoutResourceId, LinkedList<IDOMDataManager.RowMacroItem> data) {
+    public RowMacroAdapter(Context context, int rowLayoutResourceId, LinkedList<MacrosFragment.RowMacroItem> data) {
         super(context, rowLayoutResourceId, data);
         this.rowLayoutResourceId = rowLayoutResourceId;
         this.context = context;
@@ -51,7 +51,7 @@ class RowMacroAdapter extends ArrayAdapter<IDOMDataManager.RowMacroItem> {
             holder = (RowMacroHolder) row.getTag();
         }
 
-        IDOMDataManager.RowMacroItem object = macros.get(position);
+        MacrosFragment.RowMacroItem object = macros.get(position);
         holder.txtTitle.setText(object.macro_name);
         holder.imgIcon.setImageResource(android.R.drawable.ic_media_ff);
         return row;
@@ -61,6 +61,8 @@ class RowMacroAdapter extends ArrayAdapter<IDOMDataManager.RowMacroItem> {
         ImageView imgIcon;
         TextView txtTitle;
     }
+
+
 }
 
 public class MacrosFragment extends Fragment implements IDOMTaskNotyfikator{
@@ -89,7 +91,7 @@ public class MacrosFragment extends Fragment implements IDOMTaskNotyfikator{
         macroListView.setOnItemClickListener(
                 new AdapterView.OnItemClickListener(){
                     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                        IDOMDataManager.RowMacroItem macro = MainActivity.IDOM.macrosList.get(position);
+                        MacrosFragment.RowMacroItem macro = MainActivity.IDOM.macrosList.get(position);
                         MainActivity.IDOM.runMacro(view.getContext(), macro.macro_id, macro.macro_name,
                                 tmpThis);
                     }
@@ -110,4 +112,23 @@ public class MacrosFragment extends Fragment implements IDOMTaskNotyfikator{
             macroListView.setAdapter(adapter);
         }
     }
+
+    @Override
+    public void forceUpdate() {}
+
+    public static class RowMacroItem {
+
+        public int macro_id;
+        public String macro_name;
+
+        public RowMacroItem() {
+        }
+
+        public RowMacroItem(int macro_id, String macro_name) {
+
+            this.macro_id = macro_id;
+            this.macro_name = macro_name;
+        }
+    }
+
 }

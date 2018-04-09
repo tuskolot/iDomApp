@@ -27,7 +27,7 @@ import android.widget.TextView;
                 }
             });
  */
-public class MessageBox {
+public class ProfStr{
 
     public static void ask(Context context, String title, String message , DialogInterface.OnClickListener onOKClick) {
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
@@ -58,6 +58,10 @@ public class MessageBox {
         catch (Exception e){
             Log.d("MESSAGEBOX",e.toString());
         }
+    }
+
+    public static int  random_my(int maxi){
+        return (int)Math.round(Math.random()*maxi);
     }
 
 }

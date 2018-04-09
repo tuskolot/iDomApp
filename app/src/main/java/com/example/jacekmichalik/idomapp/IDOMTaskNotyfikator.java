@@ -8,4 +8,5 @@ public interface IDOMTaskNotyfikator {
     final public static String LIGHT = "LIGHT";
 
     public void handleUpdated(String updateTAG, Object addInfo);
+    public void forceUpdate();
 }
