@@ -28,10 +28,8 @@ public class PagesAdapter extends FragmentPagerAdapter {
 
             default: {
                 int floor_idx = position -2;
-                FloorItemsList fl;
                 String floor_name = MainActivity.IDOM.getFloorName(floor_idx);
-                fl = MainActivity.IDOM.floorMap.get(floor_name);
-                return new SecurItemFragment(fl);
+                return new SecurItemFragment(floor_name);
             }
         }
     }

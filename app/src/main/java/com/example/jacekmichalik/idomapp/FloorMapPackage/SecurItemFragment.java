@@ -29,11 +29,11 @@ public class SecurItemFragment extends Fragment implements IDOMTaskNotyfikator {
         this.floorMap = null;
     }
 
-    public SecurItemFragment(FloorItemsList floorMap) {
+    public SecurItemFragment(String floor_name) {
 
-        this.floorMap = floorMap;
+        this.floorMap = null;
         Bundle b = new Bundle();
-        b.putString("floor_name",floorMap.floorName);
+        b.putString("floor_name",floor_name);
         this.setArguments(b);
     }
 
@@ -48,6 +48,11 @@ public class SecurItemFragment extends Fragment implements IDOMTaskNotyfikator {
             floorMap = MainActivity.IDOM.floorMap.get(floorName);
         }
 
+    }
+
+    private String getFloorName(){
+        Bundle b = getArguments();
+        return b.getString("floor_name");
     }
 
     @Override
@@ -74,7 +79,7 @@ public class SecurItemFragment extends Fragment implements IDOMTaskNotyfikator {
         }
 
         try {
-            MainActivity.IDOM.importFloorList(view.getContext(), this, floorMap.floorName);
+            MainActivity.IDOM.importFloorList(view.getContext(), this, getFloorName() );
         } catch (Exception e) {
             Log.d("j23", this.toString() + " MainActivity.IDOM.importFloorList");
         }

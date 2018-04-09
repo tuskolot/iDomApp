@@ -1,5 +1,6 @@
 package com.example.jacekmichalik.idomapp;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.telephony.SmsManager;
@@ -22,8 +23,13 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Locale;
 import java.util.Map;
 
 import static android.view.View.VISIBLE;
@@ -31,13 +37,107 @@ import static com.example.jacekmichalik.idomapp.iDOmSettingsActivity.CNF_PHONE_N
 
 public class IDOMDataManager {
 
+    // zmienne diagnostyczne ######
+    static boolean diag_on_error_add_sample_macros = true;
+    static boolean diag_on_error_add_sample_floors = true;
+    static boolean diag_on_error_add_sample_stats = true;
+
+    public void diag_add_stats() {
+        String t = "";
+        Calendar dat;
+        Date dd;
+//        SimpleDateFormat dat_format = new SimpleDateFormat("yyyy-MM-dd");
+//        SimpleDateFormat dat_format = new SimpleDateFormat("yyyy-MM-dd");
+        DateFormat dateFormat = DateFormat.getDateInstance(DateFormat.MEDIUM, Locale.getDefault());
+        DateFormat timeFormat = DateFormat.getTimeInstance(DateFormat.SHORT, Locale.getDefault());
+
+//        SimpleDateFormat tim_format = new SimpleDateFormat("HH:mm:ss");
+
+        if (!diag_on_error_add_sample_stats)
+            return;
+
+        allLogs = "";
+
+        for (int i = 0; i < 60; i++) {
+            if (Math.round(Math.random() * 100) < 10) {
+                dat = Calendar.getInstance();
+                dat.add(Calendar.DATE, (int) (-Math.round(Math.random() * 10) - 5));
+                dd = new Date(dat.getTimeInMillis());
+                t = "\n" + dateFormat.format(dd) + "\n";
+            } else {
+                dat = Calendar.getInstance();
+                dat.add(Calendar.SECOND, (int) (-Math.round(Math.random() * 10000) - 5));
+                dd = new Date(dat.getTimeInMillis());
+                try {
+                    t = " " + timeFormat.format(dd);
+                } catch (Exception e) {
+                }
+
+            }
+            allLogs = allLogs + t;
+        }
+        lastGateOpen = "Adam 18:30";
+        tempIN = 23;
+        tempOUT = 17;
+
+        if (diag_on_error_add_sample_floors) {
+            for (int i = 0; i < 3; i++) {
+                String fn = "pietro_" + i;
+                floorArray.add(fn);
+                floorMap.put(fn, new FloorItemsList(fn));
+            }
+        }
+
+
+    }
+
+    public void diag_add_macros() {
+
+        if (!diag_on_error_add_sample_macros)
+            return;
+
+        if (macrosList.size() > 2)
+            return;
+
+        for (int i = 0; i < 11; i++) {
+            macrosList.add(new RowMacroItem(i, "Przykładowe makro: " + i));
+        }
+    }
+
+
+    public void diag_add_floors(String floor_name) {
+
+        if (!diag_on_error_add_sample_floors)
+            return;
+
+        FloorItemsList fli = floorMap.get(floor_name);
+
+        if (fli.getSize() > 0)
+            return;
+
+        int items = (int) Math.round(Math.random() * 10 + 3);
+        for (int j = 0; j < items; j++) {
+            fli.addItem(
+                    new FloorItemsList.SecurItemData(
+                            "" +  j,
+                            j % 3 == 0 ? "heater" : "light",
+                            "Element:" + j,
+                            "pokój:" + ( j ) % 4,
+                            j % 2 == 0 ? "X" : " "
+                    ));
+        }
+        fli.sortMe();
+        floorMap.put(floor_name, fli);
+    }
+
+
     public LinkedList<RowMacroItem> macrosList = new LinkedList<>();   // lista pobranych makr
     public String allLogs = ""; // historia pobrana z serwera
     public boolean partyActive = false; // status Party pobrany z serwera
     public int tempIN = 0;      //  temperatura wew
     public int tempOUT = 0;      //  temperatura zewnętrzna
     public String lastGateOpen = "";      //  ostatnie otwarcie bramy
-    public String connectStr = "...";  //  wynik odpytania serwera
+
 
     public static Map<String, Integer> jsonStatsistics = new HashMap<String, Integer>(); // statystyki wywołań jsonApi
 
@@ -149,8 +249,7 @@ public class IDOMDataManager {
                                                 jo.getString("name")));
                                     }
                                 } catch (JSONException e) {
-                                    macrosList.add(new RowMacroItem(0, "bad JSON"));
-                                    connectStr = connectStr + " getMacros: badJSON ";
+                                    Log.d("j23", " importMacrosList - getMacros: badJSON ");
                                 }
                                 updateProgressCounter(queue);
                                 callNotyficator(idomTaskNotyfikator, IDOMTaskNotyfikator.GET_MACROS, null);
@@ -159,7 +258,7 @@ public class IDOMDataManager {
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         updateProgressCounter(queue);
-                        connectStr = connectStr + " getMacros: volError";
+                        diag_add_macros();
                         callNotyficator(idomTaskNotyfikator, IDOMTaskNotyfikator.GET_MACROS, null);
 
                     }
@@ -169,7 +268,7 @@ public class IDOMDataManager {
     }
 
 
-    public void importFloorList(Context context, final IDOMTaskNotyfikator idomTaskNotyfikator, String floorName) {
+    public void importFloorList(Context context, final IDOMTaskNotyfikator idomTaskNotyfikator, final String floorName) {
 
         String url = IDOM_WWW + "JSON/@GETFLOOR$" + floorName;
         final FloorItemsList floorItemsList = floorMap.get(floorName);
@@ -209,8 +308,7 @@ public class IDOMDataManager {
 
                                     }
                                 } catch (JSONException e) {
-                                    connectStr = connectStr + " getFloors: badJSON ";
-                                    Log.d("j23", e.toString());
+                                    Log.d("j23", " getFloors: badJSON \n" + e.toString());
                                 }
                                 updateProgressCounter(queue);
                                 floorItemsList.sortMe();
@@ -220,7 +318,7 @@ public class IDOMDataManager {
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         updateProgressCounter(queue);
-                        connectStr = connectStr + " getFloors: volError";
+                        diag_add_floors(floorName);
                         callNotyficator(idomTaskNotyfikator, IDOMTaskNotyfikator.GET_FLOOR, null);
 
                     }
@@ -276,13 +374,12 @@ public class IDOMDataManager {
                             lastGateOpen = jo.getString("lastgate");
                             partyActive = jo.getString("isparty").equals("X");
                             allLogs = jo.getString("lastlogs");
-                            allLogs = jo.getString("lastlogs");
                             updateFloors(jo.getString("floors"));
                             callNotyficator(idomTaskNotyfikator, IDOMTaskNotyfikator.SYS_INFO, null);
                             sysChange();
 
                         } catch (Exception e) {
-                            connectStr = connectStr + "sysInfo:bad JSON ! ";
+                            Log.d("j23", "sysInfo:bad JSON ! ");
                         }
                         updateProgressCounter(queue);
 
@@ -290,8 +387,11 @@ public class IDOMDataManager {
                 }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
+                diag_add_stats();
+                callNotyficator(idomTaskNotyfikator, IDOMTaskNotyfikator.SYS_INFO, null);
+                sysChange();
                 updateProgressCounter(queue);
-                connectStr = connectStr + " sysInf: errListener ";
+
             }
         });
         updateProgressCounter(queue);
@@ -374,7 +474,7 @@ public class IDOMDataManager {
 
                             }
                         } catch (Exception e) {
-                            connectStr = connectStr + "sysInfo:bad JSON ! ";
+                            Log.d("j23", "turnLight:bad JSON ! ");
                         }
                         callNotyficator(idomTaskNotyfikator, IDOMTaskNotyfikator.LIGHT, si);
                     }
