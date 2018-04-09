@@ -66,11 +66,6 @@ class RowMacroAdapter extends ArrayAdapter<IDOMDataManager.RowMacroItem> {
 public class MacrosFragment extends Fragment implements IDOMTaskNotyfikator{
 
     private ListView macroListView ;
-    private TextView tempOutInfo ;
-    private TextView tempINInfo ;
-    private TextView lastEntryInfo;
-    private TextView iDomInfo ;
-    private ImageView partyModeImage;
 
 
     public MacrosFragment() {
@@ -88,35 +83,25 @@ public class MacrosFragment extends Fragment implements IDOMTaskNotyfikator{
         View rootView = inflater.inflate(R.layout.macros_fragment, container, false);
 
         macroListView = rootView.findViewById(R.id.macroListView);
-        tempOutInfo =rootView.findViewById(R.id.tOutTV);
-        tempINInfo = rootView.findViewById(R.id.tempIN_TV);
-        lastEntryInfo = rootView.findViewById(R.id.lastEntryTV);
-        iDomInfo = rootView.findViewById(R.id.iDomTV);
-        partyModeImage = rootView.findViewById(R.id.partyImage);
 
-        final IDOMTaskNotyfikator getNot = this;
+        final IDOMTaskNotyfikator tmpThis = this;
 
         macroListView.setOnItemClickListener(
                 new AdapterView.OnItemClickListener(){
                     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                         IDOMDataManager.RowMacroItem macro = MainActivity.IDOM.macrosList.get(position);
                         MainActivity.IDOM.runMacro(view.getContext(), macro.macro_id, macro.macro_name,
-                                getNot);
+                                tmpThis);
                     }
                 }
         );
 
-        lastEntryInfo.setText("pobieram dane:" + MainActivity.IDOM.IDOM_WWW);
-        tempOutInfo.setText("");
-        tempINInfo.setText("");
-
         MainActivity.IDOM.importMacrosList(getContext(),this);
-        MainActivity.IDOM.importSysInfo(getContext(),this);
         return rootView;
     }
 
     @Override
-    public void handleUpdated(String updateTAG) {
+    public void handleUpdated(String updateTAG, Object addInfo) {
 //        Toast.makeText(getContext(),"finised: "+updateTAG,Toast.LENGTH_LONG).show();
 
         if ( updateTAG.equals(IDOMTaskNotyfikator.GET_MACROS) ) {
@@ -124,21 +109,5 @@ public class MacrosFragment extends Fragment implements IDOMTaskNotyfikator{
                     R.layout.macro_row_item, MainActivity.IDOM.macrosList);
             macroListView.setAdapter(adapter);
         }
-
-        if ( updateTAG.equals(IDOMTaskNotyfikator.SYS_INFO) ) {
-            lastEntryInfo.setText(MainActivity.IDOM.lastGateOpen);
-            tempINInfo.setText(""+MainActivity.IDOM.tempIN);
-            tempOutInfo.setText(""+MainActivity.IDOM.tempOUT);
-            if (MainActivity.IDOM.partyActive)
-                DrawableCompat.setTint(
-                        partyModeImage.getDrawable(),
-                        ContextCompat.getColor(getContext(), R.color.colorAccent));
-            else
-                DrawableCompat.setTint(
-                        partyModeImage.getDrawable(),
-                        Color.LTGRAY);
-
-        }
-
     }
 }

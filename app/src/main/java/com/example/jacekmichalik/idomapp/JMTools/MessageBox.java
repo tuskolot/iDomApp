@@ -1,4 +1,4 @@
-package com.example.jacekmichalik.idomapp;
+package com.example.jacekmichalik.idomapp.JMTools;
 
 import android.app.Activity;
 import android.app.AlertDialog;

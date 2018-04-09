@@ -15,13 +15,12 @@ import android.widget.TextView;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-public class SysInfoFragment extends Fragment implements IDOMTaskNotyfikator{
+public class SysInfoFragment extends Fragment implements IDOMTaskNotyfikator {
 
     @BindView(R.id.allLogsTextView)
     TextView allLogsTV;
 
     public SysInfoFragment() {
-
     }
 
     @Override
@@ -37,13 +36,13 @@ public class SysInfoFragment extends Fragment implements IDOMTaskNotyfikator{
         View rootView = inflater.inflate(R.layout.sys_info_fragment, container, false);
 
         allLogsTV = rootView.findViewById(R.id.allLogsTextView);
-        MainActivity.IDOM.importSysInfo(rootView.getContext(),this);
+        MainActivity.IDOM.importSysInfo(rootView.getContext(), this);
 
         return rootView;
     }
 
     @Override
-    public void handleUpdated(String updateTAG) {
+    public void handleUpdated(String updateTAG, Object addInfo) {
         allLogsTV.setText(MainActivity.IDOM.allLogs);
     }
 }

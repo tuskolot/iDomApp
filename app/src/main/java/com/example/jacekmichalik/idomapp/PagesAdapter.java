@@ -4,7 +4,9 @@ package com.example.jacekmichalik.idomapp;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
-import android.text.method.HideReturnsTransformationMethod;
+
+import com.example.jacekmichalik.idomapp.FloorMapPackage.FloorItemsList;
+import com.example.jacekmichalik.idomapp.FloorMapPackage.SecurItemFragment;
 
 public class PagesAdapter extends FragmentPagerAdapter {
 
@@ -24,14 +26,22 @@ public class PagesAdapter extends FragmentPagerAdapter {
             case PAGE_MACROS:
                 return new MacrosFragment();
 
-            default:
-                return null;
+            default: {
+                int floor_idx = position -2;
+                FloorItemsList fl;
+                String floor_name = MainActivity.IDOM.getFloorName(floor_idx);
+                fl = MainActivity.IDOM.floorMap.get(floor_name);
+                return new SecurItemFragment(fl);
+            }
         }
     }
 
     @Override
     public int getCount() {
-        return 2;
+        int n = 2;
+        if (MainActivity.IDOM != null)   // TODO xxxx
+            n = n + MainActivity.IDOM.floorArray.size();
+        return n;
     }
 
     @Override
@@ -44,7 +54,7 @@ public class PagesAdapter extends FragmentPagerAdapter {
                 return "Makra";
 
             default:
-                return "????";
+                return MainActivity.IDOM.floorArray.get(position - 2).toString();
         }
     }
 }

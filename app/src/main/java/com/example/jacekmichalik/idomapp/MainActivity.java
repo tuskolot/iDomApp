@@ -1,24 +1,15 @@
 package com.example.jacekmichalik.idomapp;
 
 import android.Manifest;
-import android.app.Activity;
-import android.app.AlertDialog;
-import android.app.DialogFragment;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
 import android.graphics.Color;
-import android.graphics.pdf.PdfDocument;
-import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -26,43 +17,23 @@ import android.support.v4.graphics.drawable.DrawableCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.telephony.SmsManager;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
 import android.view.WindowManager;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.ImageView;
-import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.android.volley.Request;
-import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.StringRequest;
-import com.android.volley.toolbox.Volley;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.util.LinkedList;
-import java.util.List;
-
-import android.content.DialogInterface;
-
-import butterknife.BindView;
-import butterknife.ButterKnife;
+import com.example.jacekmichalik.idomapp.FloorMapPackage.FloorItemsList;
+import com.example.jacekmichalik.idomapp.FloorMapPackage.SecurItemFragment;
+import com.example.jacekmichalik.idomapp.JMTools.MessageBox;
+import com.example.jacekmichalik.idomapp.JMTools.SMS_Czytacz;
+import com.example.jacekmichalik.idomapp.JMTools.SmsHandler;
 
 import static android.app.PendingIntent.getActivity;
-import static android.view.View.VISIBLE;
 import static com.example.jacekmichalik.idomapp.PagesAdapter.PAGE_MACROS;
 import static com.example.jacekmichalik.idomapp.iDOmSettingsActivity.CNF_PHONE_NUMBER;
 import static java.lang.Thread.sleep;
@@ -70,10 +41,12 @@ import static java.lang.Thread.sleep;
 
 
 
-public class MainActivity extends AppCompatActivity implements SmsHandler {
+public class MainActivity extends AppCompatActivity
+        implements SmsHandler,IDOMTaskNotyfikator,SecurItemFragment.OnListFragmentInteractionListener {
 
     final static int MY_PERMISSIONS_REQUEST_SEND_SMS = 991;
     private ViewPager   viewPager;
+    private PagesAdapter pagesAdapter;
     private static Context     tmpContext;
 
 
@@ -81,41 +54,55 @@ public class MainActivity extends AppCompatActivity implements SmsHandler {
     public static IDOMDataManager IDOM = null;
 
 
+    private TextView tempOutInfo ;
+    private TextView tempINInfo ;
+    private TextView lastEntryInfo;
+    private ImageView partyModeImage;
+
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_main);
+
         tmpContext = this;
+        prefs = PreferenceManager.getDefaultSharedPreferences(this);
+
+        ProgressBar sysProgressBar =(ProgressBar)findViewById(R.id.progressBar);
+
+        tempOutInfo =findViewById(R.id.tOutTV);
+        tempINInfo = findViewById(R.id.tempIN_TV);
+        lastEntryInfo = findViewById(R.id.lastEntryTV);
+        partyModeImage = findViewById(R.id.partyImage);
+
+        lastEntryInfo.setText("pobieram dane:" + MainActivity.IDOM.IDOM_WWW);
+        tempOutInfo.setText("");
+        tempINInfo.setText("");
+
+        IDOM = new IDOMDataManager(sysProgressBar);
+        IDOM.setSysNotification(this);
 
         viewPager = (ViewPager) findViewById(R.id.viewpager);
-        PagesAdapter adapter = new PagesAdapter(getSupportFragmentManager());
-        // Set the adapter onto the view pager
-        viewPager.setAdapter(adapter);
+        pagesAdapter= new PagesAdapter(getSupportFragmentManager());
+        viewPager.setAdapter(pagesAdapter);// Set the adapter onto the view pager
 
-        // Give the TabLayout the ViewPager
-        TabLayout tabLayout = (TabLayout) findViewById(R.id.tabs);
+        TabLayout tabLayout = (TabLayout) findViewById(R.id.tabs);// Give the TabLayout the ViewPager
         tabLayout.setupWithViewPager(viewPager);
         viewPager.setCurrentItem(PAGE_MACROS);
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        ProgressBar sysProgressBar =(ProgressBar)findViewById(R.id.progressBar);
-        IDOM = new IDOMDataManager(sysProgressBar);
-
-
-
-        /* Register the broadcast receiver */
-        registerSmsListener();
-
-        /* Make sure, we have the permissions */
-        requestSmsPermission();
-
+        registerSmsListener();// Register the broadcast receiver
+        requestSmsPermission(); /* Make sure, we have the permissions */
         checkMyPermission(Manifest.permission.SEND_SMS);
-
         checkMyPermission(Manifest.permission.READ_PHONE_STATE);
 
     }
@@ -210,8 +197,6 @@ public class MainActivity extends AppCompatActivity implements SmsHandler {
         return super.onOptionsItemSelected(item);
     }
 
-
-
     @Override
     public void handleSms(String sender, String message) {
 
@@ -224,7 +209,7 @@ public class MainActivity extends AppCompatActivity implements SmsHandler {
             } else {
             }
         } catch (Exception e) {
-            Log.d("catch", e.toString());
+            Log.d("j23", e.toString());
         }
     }
 
@@ -247,6 +232,39 @@ public class MainActivity extends AppCompatActivity implements SmsHandler {
 
     public static void mb(String msg) {
 //        Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
-        Toast.makeText(tmpContext, msg, Toast.LENGTH_LONG).show();
+        try {
+            Toast.makeText(tmpContext, msg, Toast.LENGTH_LONG).show();
+        }
+        catch (Exception e){
+            Log.d("j23","exception MainWindow.mb make Toast");
+        }
+    }
+
+    @Override
+    public void handleUpdated(String updateTAG, Object addInfo) {
+
+        if ( updateTAG.equals(IDOMTaskNotyfikator.SYS_INFO) ) {
+
+            lastEntryInfo.setText(MainActivity.IDOM.lastGateOpen);
+            tempINInfo.setText(""+MainActivity.IDOM.tempIN + "°");
+            tempOutInfo.setText(""+MainActivity.IDOM.tempOUT+ "°");
+            if (MainActivity.IDOM.partyActive)
+                DrawableCompat.setTint(
+                        partyModeImage.getDrawable(),
+                        ContextCompat.getColor(this, R.color.colorAccent));
+            else
+                DrawableCompat.setTint(
+                        partyModeImage.getDrawable(),
+                        Color.LTGRAY);
+
+            pagesAdapter.notifyDataSetChanged();
+        }
+
+//        lastEntryInfo.setText(IDOM.getDiags());
+    }
+
+    @Override
+    public void onListFragmentInteraction(FloorItemsList.SecurItemData item) {
+//        Toast.makeText(getBaseContext(),item.toString(),Toast.LENGTH_LONG).show();
     }
 }

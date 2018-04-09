@@ -10,98 +10,15 @@
     tools:context=".MainActivity"
     tools:showIn="@layout/activity_main">
 
-    <ImageView
-        android:id="@+id/tempINImage"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:contentDescription="@android:string/ok"
-        android:tint="@color/colorPrimary"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/macrofragment"
-        app:srcCompat="@drawable/temp_inside"
-        tools:layout_constraintLeft_creator="1"
-        tools:layout_constraintTop_creator="1" />
-
-    <TextView
-        android:id="@+id/tempIN_TV"
-        android:layout_width="wrap_content"
-        android:layout_height="0dp"
-        android:textSize="18sp"
-        app:layout_constraintBottom_toBottomOf="@+id/tempINImage"
-        app:layout_constraintLeft_toRightOf="@+id/tempINImage"
-        app:layout_constraintTop_toTopOf="parent" />
-
 
     <ListView
         android:id="@+id/macroListView"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginBottom="8dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:maxHeight="32dp"
-        app:layout_constraintBottom_toTopOf="@+id/iDomTV"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/lastEntryTV" />
-
-    <TextView
-        android:id="@+id/iDomTV"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginStart="8dp"
-        android:maxHeight="35dp"
-        android:textColor="@android:color/holo_blue_light"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
-
-    <TextView
-        android:id="@+id/lastEntryTV"
-        android:layout_width="172dp"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="8dp"
-        android:textAlignment="center"
-        android:textColor="@color/colorPrimaryDark"
-        android:textSize="18sp"
-        app:layout_constraintBottom_toBottomOf="@+id/tempINImage"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <TextView
-        android:id="@+id/tOutTV"
-        android:layout_width="wrap_content"
-        android:layout_height="0dp"
-        android:textAlignment="gravity"
-        android:textColor="@color/colorPrimaryDark"
-        android:textSize="18sp"
-        app:layout_constraintStart_toEndOf="@+id/tempOutImage"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <ImageView
-        android:id="@+id/tempOutImage"
-        android:layout_width="wrap_content"
-
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:contentDescription="@android:string/ok"
-        android:tint="@color/colorPrimaryDark"
-        android:tintMode="src_atop"
-        app:layout_constraintStart_toEndOf="@+id/tempIN_TV"
-        app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/temp_outside" />
-
-    <ImageView
-        android:id="@+id/partyImage"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:contentDescription="@android:string/ok"
-        android:tint="@color/colorAccent"
-        app:layout_constraintStart_toEndOf="@+id/tOutTV"
-        app:layout_constraintTop_toTopOf="@+id/tOutTV"
-        app:srcCompat="@drawable/party" />
 
 </android.support.constraint.ConstraintLayout>

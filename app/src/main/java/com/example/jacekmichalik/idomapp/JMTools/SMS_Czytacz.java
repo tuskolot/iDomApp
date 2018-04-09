@@ -1,14 +1,11 @@
-package com.example.jacekmichalik.idomapp;
+package com.example.jacekmichalik.idomapp.JMTools;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.database.Cursor;
-import android.net.Uri;
 import android.provider.Telephony;
 import android.telephony.SmsMessage;
 import android.util.Log;
-import android.widget.Toast;
 
 import java.util.HashMap;
 import java.util.Map;
