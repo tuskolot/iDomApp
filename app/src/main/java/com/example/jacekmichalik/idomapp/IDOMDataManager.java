@@ -76,11 +76,15 @@ public class IDOMDataManager {
             }
             allLogs = allLogs + t;
         }
-        lastGateOpen = "Adam 18:30";
+        lastGateOpen = "DIAG 18:30";
         tempIN = 23;
         tempOUT = 17;
 
         if (diag_on_error_add_sample_floors) {
+
+            if ( floorArray.size() > 0 )
+                return;
+
             for (int i = 0; i < 3; i++) {
                 String fn = "pietro_" + i;
                 floorArray.add(fn);
