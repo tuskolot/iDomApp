@@ -59,7 +59,7 @@ public class MySecurItemRecyclerViewAdapter extends RecyclerView.Adapter<MySecur
 //            holder.mItemTypeImageView.setImageResource(R.drawable.temp_inside);
         } else {
 //            holder.mItemTypeImageView.setImageResource(R.drawable.ic_launcher_background);
-            holder.mItemTypeImageView.setImageResource(android.R.drawable.ic_media_ff);
+            holder.mItemTypeImageView.setImageResource(R.mipmap.ic_lamp_bulb_round);
 //            holder.imgIcon.setImageResource(android.R.drawable.ic_media_ff);
         }
 

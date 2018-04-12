@@ -54,20 +54,19 @@ public class SecurItemFragment extends Fragment implements IDOMTaskNotyfikator {
             floorMap = new FloorItemsList(floorName);
             MainActivity.IDOM.floorMap.put(floorName, floorMap);
             try {
-                MainActivity.IDOM.importFloorList(view.getContext(), this, floorName,false);
+                MainActivity.IDOM.importFloorList(view.getContext(), this, floorName, false);
             } catch (Exception e) {
                 Log.d("j23", this.toString() + " MainActivity.IDOM.importFloorList");
             }
         }
 
-        // Set the adapter
-        if (view instanceof RecyclerView) {
+        // Set the adapter of recyclerview
+        recyclerView = view.findViewById(R.id.secur_item_list);
+        if (recyclerView != null) {
             Context context = view.getContext();
-            recyclerView = (RecyclerView) view;
 //            column = 1
             recyclerView.setLayoutManager(new LinearLayoutManager(context));
-//            column = 2
-//                recyclerView.setLayoutManager(new GridLayoutManager(context, XXX));
+//            column = 2 recyclerView.setLayoutManager(new GridLayoutManager(context, XXX));
             recyclerView.setAdapter(new MySecurItemRecyclerViewAdapter(floorMap, mListener));
         }
 
@@ -104,9 +103,9 @@ public class SecurItemFragment extends Fragment implements IDOMTaskNotyfikator {
     @Override
     public void forceUpdate() {
         try {
-            MainActivity.IDOM.importFloorList(getContext(), this, floorMap.floorName,true);
-        }catch (Exception e){
-            Log.d("j23",e.toString());
+            MainActivity.IDOM.importFloorList(getContext(), this, floorMap.floorName, true);
+        } catch (Exception e) {
+            Log.d("j23", e.toString());
         }
     }
 
