@@ -19,6 +19,7 @@ import android.preference.RingtonePreference;
 import android.text.TextUtils;
 import android.view.MenuItem;
 import android.support.v4.app.NavUtils;
+import android.widget.Toast;
 
 import java.util.List;
 
@@ -45,6 +46,10 @@ public class iDOmSettingsActivity extends AppCompatPreferenceActivity {
         public boolean onPreferenceChange(Preference preference, Object value) {
             String stringValue = value.toString();
 
+
+            Toast.makeText(preference.getContext(),
+                    preference.getTitle() + " / "+preference.toString(),Toast.LENGTH_LONG).show();
+
             if (preference instanceof ListPreference) {
                 // For list preferences, look up the correct display value in
                 // the preference's 'entries' list.
@@ -61,6 +66,7 @@ public class iDOmSettingsActivity extends AppCompatPreferenceActivity {
                 // For all other preferences, set the summary to the value's
                 // simple string representation.
                 preference.setSummary(stringValue );
+
             }
             return true;
         }
