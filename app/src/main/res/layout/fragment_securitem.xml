@@ -10,10 +10,10 @@
         android:id="@+id/securItemTypeImage"
         android:layout_width="24dp"
         android:layout_height="24dp"
-        android:layout_marginRight="8dp"
         android:layout_gravity="start|center_vertical"
+        android:layout_marginRight="8dp"
         android:layout_weight="0"
-        app:srcCompat="@mipmap/ic_lamp_bulb_round" />
+        app:srcCompat="@android:drawable/ic_media_ff" />
 
     <LinearLayout
         android:layout_width="wrap_content"
@@ -53,4 +53,5 @@
         android:layout_height="wrap_content"
         android:layout_gravity="right|center_vertical"
         android:layout_weight="1"/>
+
 </LinearLayout>

@@ -71,8 +71,8 @@ public abstract class AppCompatPreferenceActivity extends PreferenceActivity {
     protected void onPostResume() {
         super.onPostResume();
         getDelegate().onPostResume();
-        getSharedPreferences()
-                .registerOnSharedPreferenceChangeListener(this);
+        /*getSharedPreferences()
+                .registerOnSharedPreferenceChangeListener(this);*/
     }
 
     @Override

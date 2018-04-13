@@ -13,11 +13,12 @@ import android.widget.Switch;
 import android.widget.TextView;
 
 import com.example.jacekmichalik.idomapp.IDOMTaskNotyfikator;
+import com.example.jacekmichalik.idomapp.JMTools.ProfStr;
 import com.example.jacekmichalik.idomapp.MainActivity;
 import com.example.jacekmichalik.idomapp.R;
 
 public class MySecurItemRecyclerViewAdapter extends RecyclerView.Adapter<MySecurItemRecyclerViewAdapter.ViewHolder>
-        implements IDOMTaskNotyfikator{
+        implements IDOMTaskNotyfikator {
 
     private final FloorItemsList mValues;
     private final SecurItemFragment.OnListFragmentInteractionListener mListener;
@@ -27,7 +28,7 @@ public class MySecurItemRecyclerViewAdapter extends RecyclerView.Adapter<MySecur
         mValues = items;
         mListener = listener;
         if (null == mValues)
-            Log.d("j23",this.toString()+" mValues = null");
+            Log.d("j23", this.toString() + " mValues = null");
     }
 
     @Override
@@ -40,16 +41,14 @@ public class MySecurItemRecyclerViewAdapter extends RecyclerView.Adapter<MySecur
     @Override
     public void onBindViewHolder(final ViewHolder holder, int position) {
 
-        if (null == mValues ){
-            Log.d("j23",this.toString() + "mValues = null");
+        if (null == mValues) {
+            Log.d("j23", this.toString() + "mValues = null");
             return;
         }
         holder.mItem = mValues.get(position);
         holder.mItemNameView.setText(holder.mItem.name);
-        holder.mItemDetailView.setText(holder.mItem.roomName + ", @" + holder.mItem.securID + ", "+holder.mItem.type);
+        holder.mItemDetailView.setText(holder.mItem.roomName + ", @" + holder.mItem.securID + ", " + holder.mItem.type);
         holder.position = position;
-
-        holder.mItemStateSwitch.setChecked(holder.mItem.state.equals("X"));
 
         if (holder.mItem.type.equals("heater")) {
 
@@ -59,8 +58,13 @@ public class MySecurItemRecyclerViewAdapter extends RecyclerView.Adapter<MySecur
 //            holder.mItemTypeImageView.setImageResource(R.drawable.temp_inside);
         } else {
 //            holder.mItemTypeImageView.setImageResource(R.drawable.ic_launcher_background);
-            holder.mItemTypeImageView.setImageResource(R.mipmap.ic_lamp_bulb_round);
+            if (holder.mItem.state.equals("X")) {
+                holder.mItemTypeImageView.setImageResource(R.mipmap.ic_lamp_bulb_on_front);
+            } else {
+                holder.mItemTypeImageView.setImageResource(R.mipmap.ic_lamp_bulb_off);
 //            holder.imgIcon.setImageResource(android.R.drawable.ic_media_ff);
+
+            }
         }
 
         final MySecurItemRecyclerViewAdapter tempNot = this;
@@ -74,13 +78,20 @@ public class MySecurItemRecyclerViewAdapter extends RecyclerView.Adapter<MySecur
                     // Notify the active callbacks interface (the activity, if the
                     // fragment is attached to one) that an item has been selected.
 
-                    MainActivity.IDOM.turnLight(v.getContext(),holder,tempNot);
+                    MainActivity.IDOM.turnLight(v.getContext(), holder, tempNot);
                     mListener.onListFragmentInteraction(holder.mItem);
+
+                    try{
+                        holder.mItemTypeImageView.setImageResource(R.mipmap.ic_lamp_bulb_on_front);
+                    }catch (Exception e){}
+//
+
                 }
             }
         };
 
         holder.mItemStateSwitch.setOnClickListener(onClickListener);
+        holder.mItemTypeImageView.setOnClickListener(onClickListener);
         holder.mView.setOnClickListener(onClickListener);
     }
 
@@ -94,12 +105,12 @@ public class MySecurItemRecyclerViewAdapter extends RecyclerView.Adapter<MySecur
 
     @Override
     public void handleUpdated(String updateTAG, Object addInfo) {
-        if ( null != addInfo )
-        if ( addInfo instanceof ViewHolder){
-            ViewHolder item = (ViewHolder)addInfo;
+        if (null != addInfo)
+            if (addInfo instanceof ViewHolder) {
+                ViewHolder item = (ViewHolder) addInfo;
 
-            notifyItemChanged(item.position);
-        }
+                notifyItemChanged(item.position);
+            }
 
     }
 
@@ -111,7 +122,7 @@ public class MySecurItemRecyclerViewAdapter extends RecyclerView.Adapter<MySecur
     public class ViewHolder extends RecyclerView.ViewHolder {
         public final View mView;
 
-        public int position=0;
+        public int position = 0;
         public final TextView mItemNameView;
         public final TextView mItemDetailView;
         public final ImageView mItemTypeImageView;

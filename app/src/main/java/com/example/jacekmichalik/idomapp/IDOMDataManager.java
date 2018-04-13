@@ -38,6 +38,8 @@ import static com.example.jacekmichalik.idomapp.iDOmSettingsActivity.CNF_PHONE_N
 public class IDOMDataManager {
 
     // zmienne diagnostyczne ######
+
+    static boolean diag_always_on = true;
     static boolean diag_on_error_add_sample_macros = true;
     static boolean diag_on_error_add_sample_floors = true;
     static boolean diag_on_error_add_sample_stats = true;
@@ -210,6 +212,12 @@ public class IDOMDataManager {
             return;
         }
 
+        if ( diag_always_on ) {
+            diag_add_macros();
+            callNotyficator(idomTaskNotyfikator, IDOMTaskNotyfikator.GET_MACROS, null);
+            return;
+        }
+
         final RequestQueue queue = Volley.newRequestQueue(context);
 
         macrosList.add(new MacrosFragment.RowMacroItem(MACROID_SEND_STATUS_REQUEST, "pobierz status"));
@@ -259,6 +267,12 @@ public class IDOMDataManager {
 
         if (floorItemsList.getSize() > 0 && !forceRefresh) //  struktura była już wcześniej odczytana
         {
+            callNotyficator(idomTaskNotyfikator, IDOMTaskNotyfikator.GET_FLOOR, null);
+            return;
+        }
+
+        if ( diag_always_on ) {
+            diag_add_floors(floorName, forceRefresh);
             callNotyficator(idomTaskNotyfikator, IDOMTaskNotyfikator.GET_FLOOR, null);
             return;
         }
@@ -345,6 +359,13 @@ public class IDOMDataManager {
 
         if ( allLogs.length() > 0 && !forceRefresh){
             // już raz pobrano dane
+            callNotyficator(idomTaskNotyfikator, IDOMTaskNotyfikator.SYS_INFO, null);
+            sysChange();
+            return;
+        }
+
+        if ( diag_always_on ) {
+            diag_add_stats();
             callNotyficator(idomTaskNotyfikator, IDOMTaskNotyfikator.SYS_INFO, null);
             sysChange();
             return;

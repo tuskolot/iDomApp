@@ -48,10 +48,9 @@
                                     <map>
                                       <entry key="backgroundAssetType" value="COLOR" />
                                       <entry key="backgroundColor" value="ffffff" />
-                                      <entry key="backgroundLayerName" value="ic_lamp_background" />
-                                      <entry key="foregroundImage" value="C:\Andek\iDomApp\others\Bulb-icon.png" />
-                                      <entry key="foregroundLayerName" value="ic_lamp_foreground" />
-                                      <entry key="outputName" value="ic_lamp_bulb" />
+                                      <entry key="foregroundImage" value="C:\Users\jacek.michalik\AndroidStudioProjects\firstToRun\iDomApp\other\lamp_on.png" />
+                                      <entry key="foregroundLayerName" value="ic_lamp_bulb_on_front" />
+                                      <entry key="outputName" value="ic_lamp_bulb_on" />
                                     </map>
                                   </option>
                                 </PersistentState>
