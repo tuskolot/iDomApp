@@ -27,7 +27,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity
             android:name=".iDOmSettingsActivity"
             android:label="@string/title_activity_i_dom_settings"
@@ -49,12 +48,13 @@
             android:value="@string/google_maps_key" />
 
         <activity
-            android:name=".IdomMapsActivity"
-            android:label="@string/title_activity_idom_maps">
+            android:name=".JMTools.IdomDiagsActivity"
+            android:label="@string/title_activity_diag">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.example.jacekmichalik.idomapp.MainActivity" />
         </activity>
+
     </application>
 
 </manifest>

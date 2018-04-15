@@ -27,7 +27,7 @@ public class PagesAdapter extends FragmentPagerAdapter {
                 return new MacrosFragment();
 
             default: {
-                int floor_idx = position -2;
+                int floor_idx = position - 2;
                 String floor_name = MainActivity.IDOM.getFloorName(floor_idx);
                 return SecurItemFragment.instanceMe(floor_name);
             }
@@ -38,8 +38,9 @@ public class PagesAdapter extends FragmentPagerAdapter {
     @Override
     public int getCount() {
         int n = 2;
-        if (MainActivity.IDOM != null)
+        if (MainActivity.IDOM != null) {
             n = n + MainActivity.IDOM.floorArray.size();
+        }
         return n;
     }
 
@@ -55,5 +56,7 @@ public class PagesAdapter extends FragmentPagerAdapter {
             default:
                 return MainActivity.IDOM.floorArray.get(position - 2).toString();
         }
+
     }
+
 }

@@ -18,6 +18,7 @@ import com.android.volley.toolbox.Volley;
 import com.example.jacekmichalik.idomapp.FloorMapPackage.FloorItemsList;
 import com.example.jacekmichalik.idomapp.FloorMapPackage.MySecurItemRecyclerViewAdapter;
 import com.example.jacekmichalik.idomapp.JMTools.ProfStr;
+import com.google.android.gms.maps.MapView;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -41,11 +42,6 @@ public class IDOMDataManager {
 
     // zmienne diagnostyczne ######
 
-    static boolean diag_always_on = true;
-    static boolean diag_on_error_add_sample_macros = true;
-    static boolean diag_on_error_add_sample_floors = true;
-    static boolean diag_on_error_add_sample_stats = true;
-
     public void diag_add_stats() {
         String t = "";
         Calendar dat;
@@ -53,7 +49,7 @@ public class IDOMDataManager {
         DateFormat dateFormat = DateFormat.getDateInstance(DateFormat.MEDIUM, Locale.getDefault());
         DateFormat timeFormat = DateFormat.getTimeInstance(DateFormat.SHORT, Locale.getDefault());
 
-        if (!diag_on_error_add_sample_stats)
+        if (!diag_AddDummyOnError())
             return;
 
         allLogs="";
@@ -80,7 +76,7 @@ public class IDOMDataManager {
         tempIN = 23;
         tempOUT = 17;
 
-        if (diag_on_error_add_sample_floors) {
+        if (diag_AddDummyOnError()) {
 
             if ( floorArray.size() > 0 )
                 return;
@@ -96,7 +92,7 @@ public class IDOMDataManager {
 
     public void diag_add_macros() {
 
-        if (!diag_on_error_add_sample_macros)
+        if (!diag_AddDummyOnError())
             return;
 
         if (macrosList.size() > 2)
@@ -110,7 +106,7 @@ public class IDOMDataManager {
 
     public void diag_add_floors(String floor_name,boolean forceRefresh) {
 
-        if (!diag_on_error_add_sample_floors)
+        if (!diag_AddDummyOnError())
             return;
 
         FloorItemsList fli = floorMap.get(floor_name);
@@ -214,7 +210,7 @@ public class IDOMDataManager {
             return;
         }
 
-        if ( diag_always_on ) {
+        if ( !diag_UseRest() ) {
             diag_add_macros();
             callNotyficator(idomTaskNotyfikator, IDOMTaskNotyfikator.GET_MACROS, null);
             return;
@@ -273,7 +269,7 @@ public class IDOMDataManager {
             return;
         }
 
-        if ( diag_always_on ) {
+        if ( !diag_UseRest()  ) {
             diag_add_floors(floorName, forceRefresh);
             callNotyficator(idomTaskNotyfikator, IDOMTaskNotyfikator.GET_FLOOR, null);
             return;
@@ -366,7 +362,7 @@ public class IDOMDataManager {
             return;
         }
 
-        if ( diag_always_on ) {
+        if ( !diag_UseRest()  ) {
             diag_add_stats();
             callNotyficator(idomTaskNotyfikator, IDOMTaskNotyfikator.SYS_INFO, null);
             sysChange();
@@ -525,4 +521,35 @@ public class IDOMDataManager {
         else
             return floorArray.get(floor_idx).toString();
     }
+
+
+    public boolean diag_IsON() {
+        try {
+            if (null == MainActivity.prefs) return false;
+            return MainActivity.prefs.getBoolean("show_diaga", false);
+        }catch (Exception e){ return false;}
+    }
+
+    public boolean diag_UseRest() {
+        try {
+            if (null == MainActivity.prefs) return false;
+            return MainActivity.prefs.getBoolean("useREST", true);
+        }catch (Exception e){ return false;}
+    }
+
+    public void diag_setRestUse(boolean use_rest) {
+        try {
+            if (null == MainActivity.prefs) return ;
+            MainActivity.prefs.edit().putBoolean("useREST", use_rest).commit();
+        }catch (Exception e){ Log.d("j23","diag_setRestUse");}
+    }
+
+    public boolean diag_AddDummyOnError() {
+        try {
+            if (null == MainActivity.prefs) return false;
+            return MainActivity.prefs.getBoolean("dummyOnError", true);
+        }catch (Exception e){ return false;}
+    }
+
+
 }

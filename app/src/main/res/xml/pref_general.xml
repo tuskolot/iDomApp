@@ -1,10 +1,10 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
     <SwitchPreference
-        android:defaultValue="true"
-        android:key="alarm_state"
-        android:summary="@string/pref_description_alarm"
-        android:title="@string/pref_title_alarm" />
+        android:defaultValue="false"
+        android:key="show_diaga"
+        android:summary="@string/pref_description_diags"
+        android:title="@string/pref_title_diags" />
 
     <!-- NOTE: EditTextPreference accepts EditText attributes. -->
     <!-- NOTE: EditTextPreference's summary should be set to its value by the activity code. -->

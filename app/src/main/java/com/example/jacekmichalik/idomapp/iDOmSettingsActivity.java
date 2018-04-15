@@ -47,9 +47,6 @@ public class iDOmSettingsActivity extends AppCompatPreferenceActivity {
             String stringValue = value.toString();
 
 
-            Toast.makeText(preference.getContext(),
-                    preference.getTitle() + " / "+preference.toString(),Toast.LENGTH_LONG).show();
-
             if (preference instanceof ListPreference) {
                 // For list preferences, look up the correct display value in
                 // the preference's 'entries' list.

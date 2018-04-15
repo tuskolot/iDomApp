@@ -24,6 +24,7 @@ import java.util.Date;
 
 
 import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
@@ -32,12 +33,6 @@ import com.google.android.gms.location.LocationServices;
 
 
 
- interface LocationManagerInterface {
-    String TAG = LocationManagerInterface.class.getSimpleName();
-
-    void locationFetched(Location mLocation, Location oldLocation, String time, String locationProvider);
-
-}
 
 
 /**
@@ -145,7 +140,7 @@ public class SmartLocationManager implements
 
     @Override
     public void onConnected(Bundle connectionHint) {
-        Location location ;
+        Location location =null;
         try{
             location = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
         }catch (Exception e){}
@@ -284,40 +279,40 @@ public class SmartLocationManager implements
         }
     }
 
-    public void pauseLocationFetching() {
-        if (mGoogleApiClient.isConnected()) {
-            LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
-            mGoogleApiClient.disconnect();
-        }
+//    public void pauseLocationFetching() {
+//        if (mGoogleApiClient.isConnected()) {
+//            LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
+//            mGoogleApiClient.disconnect();
+//        }
+//
+//    }
 
-    }
+//    public void abortLocationFetching() {
+//        mGoogleApiClient.disconnect();
+//
+//         Remove the listener you previously added
+//        if (locationManager != null && locationListener != null) {
+//            if (Build.VERSION.SDK_INT >= 23 &&
+//                    ContextCompat.checkSelfPermission(mContext, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+//                    ContextCompat.checkSelfPermission(mContext, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+//                return;
+//            }
+//            try {
+//                locationManager.removeUpdates(locationListener);
+//                locationManager = null;
+//            } catch (Exception ex) {
+//                Log.e(TAG, ex.getMessage());
+//
+//            }
+//        }
+//    }
 
-    public void abortLocationFetching() {
-        mGoogleApiClient.disconnect();
-
-        // Remove the listener you previously added
-        if (locationManager != null && locationListener != null) {
-            if (Build.VERSION.SDK_INT >= 23 &&
-                    ContextCompat.checkSelfPermission(mContext, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                    ContextCompat.checkSelfPermission(mContext, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                return;
-            }
-            try {
-                locationManager.removeUpdates(locationListener);
-                locationManager = null;
-            } catch (Exception ex) {
-                Log.e(TAG, ex.getMessage());
-
-            }
-        }
-    }
-
-    public void resetLocation() {
-        mLocationFetched = null;
-        mLastLocationFetched = null;
-        networkLocation = null;
-        gpsLocation = null;
-    }
+//    public void resetLocation() {
+//        mLocationFetched = null;
+//        mLastLocationFetched = null;
+//        networkLocation = null;
+//        gpsLocation = null;
+//    }
 
     //  Android M Permission check
     public void askLocationPermission() {
@@ -417,7 +412,7 @@ public class SmartLocationManager implements
     }
 
     public boolean isGooglePlayServicesAvailable() {
-        int status = GooglePlayServicesUtil.isGooglePlayServicesAvailable(mContext);
+        int status = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(mContext);
 
         if (status == ConnectionResult.SUCCESS) {
             return true;
@@ -510,4 +505,12 @@ public class SmartLocationManager implements
             return getBetterLocation(locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER), locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER));
         }
     }
+
+    public interface LocationManagerInterface {
+        String TAG = LocationManagerInterface.class.getSimpleName();
+
+        void locationFetched(Location mLocation, Location oldLocation, String time, String locationProvider);
+
+    }
+
 }

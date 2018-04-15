@@ -78,6 +78,13 @@ public class MainActivity extends AppCompatActivity
         tmpContext = this;
         prefs = PreferenceManager.getDefaultSharedPreferences(this);
 
+        String pn = prefs.getString(CNF_PHONE_NUMBER, "xxx");
+        if (pn.isEmpty() || pn.equals("xxx") || pn.length()<11){
+            prefs.edit().putString(CNF_PHONE_NUMBER,"+48791840947").apply();
+            mb("Ustawiono adres centrali na: " + prefs.getString(CNF_PHONE_NUMBER, "").toString());
+        }
+
+
         ProgressBar sysProgressBar =(ProgressBar)findViewById(R.id.progressBar);
         fab = findViewById(R.id.floatingActionButton);
         fab.setOnClickListener(new View.OnClickListener() {
