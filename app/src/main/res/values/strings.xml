@@ -36,4 +36,6 @@
         <item>-1</item>
     </string-array>
 
+    <string name="title_activity_idom_maps">Map</string>
+
 </resources>

@@ -5,60 +5,90 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-public class FloorItemsList implements Comparator<FloorItemsList.SecurItemData>{
+public class FloorItemsList implements Comparator<FloorItemsList.SecurItemData> {
 
-    public String  floorName = "";
-    public List<SecurItemData> siList = new ArrayList<SecurItemData>();
+    final public static String TYPE_LIGHT = "light";
+    final public static String TYPE_HEATER= "heater";
+    final public static String TYPE_ROOM= "room";
 
-    public FloorItemsList(String floorName){
+    public String floorName ;
+    private LinkedList<SecurItemData> siList = new LinkedList<>();
+
+    public FloorItemsList(String floorName) {
         this.floorName = floorName;
     }
 
     public void addItem(SecurItemData item) {
-        if (item.type.equals("light"))
+        if (item.type.equals(TYPE_LIGHT))
             siList.add(item);
     }
 
-    public SecurItemData get(int position){
+    public SecurItemData get(int position) {
         return siList.get(position);
     }
 
-    public int getSize(){
+    public int getSize() {
         return siList.size();
     }
-    public void clearAll() { siList.clear(); }
 
-    @Override
-    public int compare(SecurItemData o1, SecurItemData o2) {
+    public void clearAll() {
+        siList.clear();
+    }
+
+    private int subCompare(SecurItemData o1, SecurItemData o2){
 
         int c;
 
-        if ( o1 == o2 )
+        if (o1 == o2)
             return 0;
-        if ( null == o1 )
+        if (null == o1)
             return -1;
-        if ( null == o2 )
+        if (null == o2)
             return 1;
 
         // są różne pokoje
-        c = o1.roomName.compareToIgnoreCase(o2.roomName) ;
-        if ( c != 0 )
+        c = o1.roomName.compareToIgnoreCase(o2.roomName);
+        if (c != 0)
             return c;
 
         // pokoje są te same, sortój po typie
-        c = o1.type.compareToIgnoreCase(o2.type) ;
-        if ( c != 0 )
+        c = o1.type.compareToIgnoreCase(o2.type);
+        if (c != 0)
             return -c;
 
         // ten sam typ, sortuj po nazwie
-        return  o1.name.compareToIgnoreCase(o2.name) ;
+        return o1.name.compareToIgnoreCase(o2.name);
     }
 
-    public void sortMe(){
+    @Override
+    public int compare(SecurItemData o1, SecurItemData o2) {
+        return -subCompare(o1,o2);
+    }
+
+    public void orderMe() {
         Collections.sort(siList, this);
+        // a teraz powstawiam "pokoje" do listy
+
+//        if ( siList != null)            return;
+
+        String lastRoomName = "";
+        SecurItemData securItemData;
+        int cur_idx = 0;
+        int startsiz = siList.size();
+
+        while (cur_idx < siList.size()) {
+            securItemData = siList.get(cur_idx);
+            if (lastRoomName.compareToIgnoreCase(securItemData.roomName) != 0) {
+                lastRoomName = securItemData.roomName;
+                siList.add(cur_idx, new SecurItemData("0", TYPE_ROOM, lastRoomName, lastRoomName, ""));
+            }
+            cur_idx++;
+
+        }
     }
 
     public static class SecurItemData {
@@ -78,7 +108,7 @@ public class FloorItemsList implements Comparator<FloorItemsList.SecurItemData>{
 
         @Override
         public String toString() {
-            return securID + "/"+type+": "  + name + "["+state+"]";
+            return securID + "/" + type + ": " + name + "[" + state + "]";
         }
     }
 

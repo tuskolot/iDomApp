@@ -33,6 +33,8 @@ import java.util.Locale;
 import java.util.Map;
 
 import static android.view.View.VISIBLE;
+import static com.example.jacekmichalik.idomapp.FloorMapPackage.FloorItemsList.TYPE_HEATER;
+import static com.example.jacekmichalik.idomapp.FloorMapPackage.FloorItemsList.TYPE_LIGHT;
 import static com.example.jacekmichalik.idomapp.iDOmSettingsActivity.CNF_PHONE_NUMBER;
 
 public class IDOMDataManager {
@@ -121,13 +123,13 @@ public class IDOMDataManager {
             fli.addItem(
                     new FloorItemsList.SecurItemData(
                             "" +  j,
-                            j % 3 == 0 ? "heater" : "light",
+                            j % 3 == 0 ? TYPE_HEATER : TYPE_LIGHT,
                             "Element:" + j,
                             "pokój:" + ( j ) % 4,
                             ProfStr.random_my(3) == 0 ? "X" : " "
                     ));
         }
-        fli.sortMe();
+        fli.orderMe();
         floorMap.put(floor_name, fli);
     }
 
@@ -220,7 +222,7 @@ public class IDOMDataManager {
 
         final RequestQueue queue = Volley.newRequestQueue(context);
 
-        macrosList.add(new MacrosFragment.RowMacroItem(MACROID_SEND_STATUS_REQUEST, "pobierz status"));
+        macrosList.add(new MacrosFragment.RowMacroItem(MACROID_SEND_STATUS_REQUEST, "SMS: pobierz status"));
 
         incDiags(IDOMTaskNotyfikator.GET_MACROS);
 
@@ -310,7 +312,7 @@ public class IDOMDataManager {
                                     Log.d("j23", " getFloors: badJSON \n" + e.toString());
                                 }
                                 updateProgressCounter(queue);
-                                floorItemsList.sortMe();
+                                floorItemsList.orderMe();
                                 callNotyficator(idomTaskNotyfikator, IDOMTaskNotyfikator.GET_FLOOR, null);
                             }
                         }, new Response.ErrorListener() {

@@ -17,8 +17,14 @@ import com.example.jacekmichalik.idomapp.JMTools.ProfStr;
 import com.example.jacekmichalik.idomapp.MainActivity;
 import com.example.jacekmichalik.idomapp.R;
 
+import java.util.Collection;
+
+import static com.example.jacekmichalik.idomapp.FloorMapPackage.FloorItemsList.TYPE_HEATER;
+import static com.example.jacekmichalik.idomapp.FloorMapPackage.FloorItemsList.TYPE_LIGHT;
+import static com.example.jacekmichalik.idomapp.FloorMapPackage.FloorItemsList.TYPE_ROOM;
+
 public class MySecurItemRecyclerViewAdapter extends RecyclerView.Adapter<MySecurItemRecyclerViewAdapter.ViewHolder>
-        implements IDOMTaskNotyfikator {
+        implements IDOMTaskNotyfikator{
 
     private final FloorItemsList mValues;
     private final SecurItemFragment.OnListFragmentInteractionListener mListener;
@@ -45,54 +51,74 @@ public class MySecurItemRecyclerViewAdapter extends RecyclerView.Adapter<MySecur
             Log.d("j23", this.toString() + "mValues = null");
             return;
         }
+
         holder.mItem = mValues.get(position);
-        holder.mItemNameView.setText(holder.mItem.name);
+        holder.mItemNameView.setText(holder.mItem.name );
         holder.mItemDetailView.setText(holder.mItem.roomName + ", @" + holder.mItem.securID + ", " + holder.mItem.type);
         holder.position = position;
 
-        if (holder.mItem.type.equals("heater")) {
-
+        if (holder.mItem.type.equals(TYPE_HEATER)) {
             holder.mItemTypeImageView.setImageResource(R.mipmap.ic_heater_foreground);
-//            DrawableCompat.setTint( holder.mItemTypeImageView.getDrawable(), Color.RED);
-//            DrawableCompat.setTintMode( holder.mItemTypeImageView.getDrawable(), T);
-//            holder.mItemTypeImageView.setImageResource(R.drawable.temp_inside);
-        } else {
-//            holder.mItemTypeImageView.setImageResource(R.drawable.ic_launcher_background);
-            if (holder.mItem.state.equals("X")) {
-                holder.mItemTypeImageView.setImageResource(R.mipmap.ic_lamp_bulb_on_front);
-            } else {
-                holder.mItemTypeImageView.setImageResource(R.mipmap.ic_lamp_bulb_off);
-//            holder.imgIcon.setImageResource(android.R.drawable.ic_media_ff);
+        }
 
-            }
+        if (holder.mItem.type.equals(TYPE_LIGHT)) {
+            updateLightState(holder.mItemTypeImageView, holder.mItem.state.equals("X"));
+            holder.mItemTypeImageView.setVisibility(View.VISIBLE);
+            holder.mItemNameView.setTextColor(Color.GRAY);
+            holder.mItemNameView.setTextSize(16);
+        }
+
+        if (holder.mItem.type.equals(TYPE_ROOM)) {
+            holder.mItemTypeImageView.setVisibility(View.GONE);
+            holder.mItemNameView.setTextColor(Color.LTGRAY);
+            holder.mItemNameView.setTextSize(10);
         }
 
         final MySecurItemRecyclerViewAdapter tempNot = this;
 
-        View.OnClickListener onClickListener = new View.OnClickListener() {
+        if (holder.mItem.type.equals(TYPE_LIGHT)) {
+            View.OnClickListener onClickListener = new View.OnClickListener() {
 
+                @Override
+                public void onClick(View v) {
+                    if (null != mListener) {
+                        // Notify the active callbacks interface (the activity, if the
+                        // fragment is attached to one) that an item has been selected.
 
-            @Override
-            public void onClick(View v) {
-                if (null != mListener) {
-                    // Notify the active callbacks interface (the activity, if the
-                    // fragment is attached to one) that an item has been selected.
+                        if (holder.mItem.type.equals(TYPE_LIGHT)) {
+                            MainActivity.IDOM.turnLight(v.getContext(), holder, tempNot);
+                            mListener.onListFragmentInteraction(holder.mItem);
 
-                    MainActivity.IDOM.turnLight(v.getContext(), holder, tempNot);
-                    mListener.onListFragmentInteraction(holder.mItem);
+                            try {
+                                updateLightState(holder.mItemTypeImageView, !holder.mItem.state.equals("X"));
+                            } catch (Exception e) {
+                                Log.d("j23", "updateLightState" + e.toString());
+                            }
+                        }
 
-                    try{
-                        holder.mItemTypeImageView.setImageResource(R.mipmap.ic_lamp_bulb_on_front);
-                    }catch (Exception e){}
-//
-
+                    }
                 }
-            }
-        };
+            };
 
-        holder.mItemStateSwitch.setOnClickListener(onClickListener);
-        holder.mItemTypeImageView.setOnClickListener(onClickListener);
-        holder.mView.setOnClickListener(onClickListener);
+            holder.mItemTypeImageView.setOnClickListener(onClickListener);
+            holder.mView.setOnClickListener(onClickListener);
+        }
+
+    }
+
+    private void updateLightState(ImageView imageView, boolean light_state) {
+        try {
+            if (light_state) {
+                imageView.setImageResource(R.mipmap.ic_lamp_bulb_on_front);
+            } else {
+                imageView.setImageResource(R.mipmap.ic_lamp_bulb_off);
+            }
+        } catch (Exception e) {
+            Log.d("j23", "updateLightState" + e.toString());
+        }
+        if (imageView.getVisibility() != View.VISIBLE)
+            imageView.setVisibility(View.VISIBLE);
+
     }
 
     @Override
@@ -126,7 +152,6 @@ public class MySecurItemRecyclerViewAdapter extends RecyclerView.Adapter<MySecur
         public final TextView mItemNameView;
         public final TextView mItemDetailView;
         public final ImageView mItemTypeImageView;
-        public final Switch mItemStateSwitch;
 
         public FloorItemsList.SecurItemData mItem;
 
@@ -136,13 +161,13 @@ public class MySecurItemRecyclerViewAdapter extends RecyclerView.Adapter<MySecur
             mItemNameView = (TextView) view.findViewById(R.id.item_name);
             mItemDetailView = (TextView) view.findViewById(R.id.item_details);
             mItemTypeImageView = (ImageView) view.findViewById(R.id.securItemTypeImage);
-            mItemStateSwitch = (Switch) view.findViewById(R.id.lightSwitch);
         }
 
         @Override
         public String toString() {
-            return super.toString() + " '" + mItemNameView.getText() + "'";
+            return super.toString() + " '" + mItemNameView.getText() + "'/[" + position + "] " + mItem.type;
         }
+
 
     }
 }
