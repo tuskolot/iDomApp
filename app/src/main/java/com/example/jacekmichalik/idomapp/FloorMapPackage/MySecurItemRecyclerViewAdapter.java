@@ -64,14 +64,15 @@ public class MySecurItemRecyclerViewAdapter extends RecyclerView.Adapter<MySecur
         if (holder.mItem.type.equals(TYPE_LIGHT)) {
             updateLightState(holder.mItemTypeImageView, holder.mItem.state.equals("X"));
             holder.mItemTypeImageView.setVisibility(View.VISIBLE);
-            holder.mItemNameView.setTextColor(Color.GRAY);
+            holder.mItemNameView.setTextColor(Color.DKGRAY);
             holder.mItemNameView.setTextSize(16);
         }
 
         if (holder.mItem.type.equals(TYPE_ROOM)) {
+            holder.mItemNameView.setText(holder.mItem.name + "   "+holder.mItem.addInfo);
             holder.mItemTypeImageView.setVisibility(View.GONE);
-            holder.mItemNameView.setTextColor(Color.LTGRAY);
-            holder.mItemNameView.setTextSize(10);
+            holder.mItemNameView.setTextColor(Color.GRAY);
+            holder.mItemNameView.setTextSize(13);
         }
 
         final MySecurItemRecyclerViewAdapter tempNot = this;

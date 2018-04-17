@@ -12,10 +12,10 @@ import java.util.Map;
 public class FloorItemsList implements Comparator<FloorItemsList.SecurItemData> {
 
     final public static String TYPE_LIGHT = "light";
-    final public static String TYPE_HEATER= "heater";
-    final public static String TYPE_ROOM= "room";
+    final public static String TYPE_HEATER = "heater";
+    final public static String TYPE_ROOM = "room";
 
-    public String floorName ;
+    public String floorName;
     private LinkedList<SecurItemData> siList = new LinkedList<>();
 
     public FloorItemsList(String floorName) {
@@ -23,7 +23,7 @@ public class FloorItemsList implements Comparator<FloorItemsList.SecurItemData> 
     }
 
     public void addItem(SecurItemData item) {
-        if (item.type.equals(TYPE_LIGHT))
+//        if (item.type.equals(TYPE_LIGHT))
             siList.add(item);
     }
 
@@ -39,7 +39,7 @@ public class FloorItemsList implements Comparator<FloorItemsList.SecurItemData> 
         siList.clear();
     }
 
-    private int subCompare(SecurItemData o1, SecurItemData o2){
+    private int subCompare(SecurItemData o1, SecurItemData o2) {
 
         int c;
 
@@ -66,7 +66,7 @@ public class FloorItemsList implements Comparator<FloorItemsList.SecurItemData> 
 
     @Override
     public int compare(SecurItemData o1, SecurItemData o2) {
-        return -subCompare(o1,o2);
+        return -subCompare(o1, o2);
     }
 
     public void orderMe() {
@@ -84,11 +84,29 @@ public class FloorItemsList implements Comparator<FloorItemsList.SecurItemData> 
             securItemData = siList.get(cur_idx);
             if (lastRoomName.compareToIgnoreCase(securItemData.roomName) != 0) {
                 lastRoomName = securItemData.roomName;
-                siList.add(cur_idx, new SecurItemData("0", TYPE_ROOM, lastRoomName, lastRoomName, ""));
+                // wstaw nowy obiekt - pokój
+                siList.add(cur_idx, new SecurItemData(
+                        "0", TYPE_ROOM, lastRoomName, lastRoomName, "",
+                        getRoomTemps(lastRoomName)));
             }
             cur_idx++;
 
         }
+
+        // na koniec usuń obiekty typu HEATER
+        for (int i = 0; i < siList.size(); i++) {
+            if (siList.get(i).type.equals(TYPE_HEATER))
+                siList.remove(i);
+        }
+
+    }
+
+    public String getRoomTemps(String roomName) {
+        for (SecurItemData si : siList) {
+            if (si.type.equals(TYPE_HEATER) && si.roomName.equals(roomName))
+                return si.addInfo;
+        }
+        return "";
     }
 
     public static class SecurItemData {
@@ -97,13 +115,15 @@ public class FloorItemsList implements Comparator<FloorItemsList.SecurItemData> 
         public String name;
         public String roomName;
         public String state;
+        public String addInfo;
 
-        public SecurItemData(String securID, String type, String name, String roomName, String state) {
+        public SecurItemData(String securID, String type, String name, String roomName, String state, String addInfo) {
             this.securID = securID;
             this.type = type;
             this.name = name;
             this.roomName = roomName;
             this.state = state;
+            this.addInfo = addInfo;
         }
 
         @Override

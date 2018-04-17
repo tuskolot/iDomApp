@@ -122,7 +122,8 @@ public class IDOMDataManager {
                             j % 3 == 0 ? TYPE_HEATER : TYPE_LIGHT,
                             "Element:" + j,
                             "pokój:" + ( j ) % 4,
-                            ProfStr.random_my(3) == 0 ? "X" : " "
+                            ProfStr.random_my(3) == 0 ? "X" : " ",
+                            ""
                     ));
         }
         fli.orderMe();
@@ -300,7 +301,9 @@ public class IDOMDataManager {
                                                 jo.getString("type"),
                                                 jo.getString("name"),
                                                 jo.getString("room"),
-                                                jo.getString("state"));
+                                                jo.getString("state"),
+                                                jo.getString("add_info")
+                                                );
                                         floorItemsList.addItem(si);
 
                                     }
